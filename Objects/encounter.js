@@ -5,6 +5,10 @@ function isEncounterTemplate(obj) {
     return bool;
 }
 
+function getEncounter(game_state) {
+    return controller.state.data.encounter;
+}
+
 function isEncounter(obj) {
     var bool = true;
     

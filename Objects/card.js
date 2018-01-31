@@ -6,17 +6,13 @@ function isCard(obj) {
     bool &= "number" === typeof(obj.card_attack);
     bool &= "number" === typeof(obj.card_defense);
     bool &= "number" === typeof(obj.card_cost);
-    bool &= Array.isArray(obj.card_effects);
-    if (!bool) return false;
-    for (var i = 0; i < obj.card_effects.length; i++) {
-        // every item in obj.card_effects must be a cardEffect
-        if (! isCardEffect(obj.card_effects[i])) return false;
-    }
+    // card effects is an object, each field contains a function which returns a game_script execution.
+    bool &= "object" === typeof(obj.card_effects);
     return bool;
 }
 
-function isCardEffect(obj) {
-    // TODO i defined this to return true so I can use cards before I 
-    // create what a card effect is
-    return true;  
-}
+
+/* Card Effect Types
+onPlayCard
+onCardResolved
+onAttacked
