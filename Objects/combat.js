@@ -76,7 +76,8 @@ function resolveCardScript(controller, data) {
     
 function resolveCard(controller, encounter, attacker, defender) {
     // execute card.resolveCard
-    var modifier = defender.activeCard.modifiers.defending(card);
+    var modifier1 = executeCardModifier("", controller, attacker.activeCard, defender.activeCard);
+    var modifier2 = executeCardModifier("onNewCardPlayed", controller, attacker.previous, attacker.activeCard);
     var defenseStat = 0;
     if (isCard(defender.activeCard)) {
         defenseStat = defender.activeCard.card_defense;
