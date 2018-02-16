@@ -42,6 +42,7 @@ function isCombatant(obj) {
     return bool;
 } 
 
-function CombatAction(value) {
-    this.value = value
+function CombatAction(type, value) {
+    this.type = type;
+    this.value = value;
 }
