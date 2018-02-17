@@ -1,6 +1,7 @@
 
 
 
+// data = {"call_data": {"attacker": character, "action": action}}
 function takeActionScript(controller, data) {
     var encounter = getEncounter(controller.state);
     var attacker = encounter[data.call_data.attacker];
@@ -33,7 +34,9 @@ function getCardEffectArgs(effect_id, card) {
     if (null === card || undefined === card) { return []; }
     if ("undefined" === typeof(card.effect_args)) { return []; }
     if ("undefined" === typeof(card.effect_args[effect_id])) { return []; }
-    return card.effect_args[effect_id];
+    var args = card.effect_args[effect_id];
+    console.log(args);
+    return args;
 }
 
 function executeCardEffect(effect_id, controller, card, otherCard) {
@@ -47,7 +50,7 @@ function executeCardEffect(effect_id, controller, card, otherCard) {
         "controller": controller,
         "card": card,
         "target": otherCard,
-        "cardArgs": cardArgs
+        "card_args": cardArgs
     };
     controller.execute_script(script_id, script_args);
 }
@@ -66,16 +69,18 @@ function playCard(controller, attacker, encounter, card_index) {
     attacker.previousCard = attacker.active_card;
     attacker.active_card = card;
     attacker.initiative -= card.card_cost;
+    removeCardFromHand(controller, attacker, card_index)
 }
 
-function drawCard(character, index) {
+function drawCard(controller, character, index) {
     var card_id = character.deck.pop()
-    var newCard = get_by_type_and_id("card", card_id);
+    var new_card = controller.get_by_type_and_id("card", card_id);
     var i = character.hand.length;
-    character.hand[i] = newCard;
+    character.hand[i] = new_card;
+    executeCardEffect("onDrawn", controller, new_card, undefined);
 }
 
-function shuffleDeck(character) {
+function shuffleDeck(controller, character) {
     var new_deck = [];
     while(character.deck.length > 0) {
         var len = character.deck.length;
@@ -86,19 +91,22 @@ function shuffleDeck(character) {
     character.deck = new_deck;
 }
 
-function removeCardFromHand(character, index) {
+function removeCardFromHand(controller, character, index) {
     var card = character.hand[index];
     console.log("removeCardFromHand: card; " + card);
     character.hand.splice(index, 1);
     console.log(character);
-    addCardToDiscard(character, card.card_id)
-}
-function addCardToDiscard(character, card_id) {
+    executeCardEffect("onRemovedFromHand", controller, card, undefined);
     var i = character.discard.length;
-    console.log("addCardToDiscard - discard:");
+    character.discard[i] = card.card_id;
+    executeCardEffect("onDiscarded", controller, card, undefined);
+}
+function addCardToDiscard(controller, character, card_id) {
+    // NOTE: does not invoke "onDiscarded" scripts, this should be invoked
+    // after this function is called. Since this function does not take a card 
+    // (which is required for invoking the card effect)
+    console.log("combar.js - addCardToDiscard");
     console.log(character.discard);
-    console.log("addCardToDiscard: discard length; " + i);
-    character.discard[i] = card_id;
 }
     
 function resolveCardScript(controller, data) { 
@@ -128,6 +136,12 @@ function resolveCard(controller, encounter, attacker, defender) {
         } else if (attacker.active_card.card_attack != 0) {
             executeCardEffect("onAttackBlocked", controller, attacker.active_card, defender.active_card);
             executeCardEffect("onBlocksAttack", controller, defender.active_card, attacker.active_card);
+        }
+    } else {
+        if (damage > 0) {
+            executeCardEffect("onDealsDamage", controller, attacker.active_card, defender.active_card);
+        } else if (attacker.active_card.card_attack != 0) {
+            executeCardEffect("onAttackBlocked", controller, attacker.active_card, defender.active_card);
         }
     }
 }

@@ -34,9 +34,9 @@ function isCard(obj) {
  * onBlocksAttack           - resolves when an attack, with at least 1 attack is made,
  *                             that deals no damage
  * onAttackBlocked              - resolves when card is played, but fails to deal damage
- * &&& onDeckDiscard            - resolves when card is discarded from the deck
- * &&& onHandDiscarded          - resolves when card is discarded from the hand
- * &&& onDrawn                  - resolves as soon as the card is drawn from the deck
+ * onDiscarded              - resolves as soon as the card is added to the discard
+ * onRemovedFromHand        - resolves as soon as the card is removed from the hand.
+ * onDrawn                  - resolves as soon as the card is drawn from the deck
  * &&& onOpponentDraws          - resolves as soon as the card is drawn from the deck
  */
  // &&& field not yet implemented in the pipeline
