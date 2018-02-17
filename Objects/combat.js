@@ -1,22 +1,67 @@
 
+/**
+ * take_turn_script: sid: "take_turn"
+ * args: {
+ *   "action_list": [action]
+ * }
+ */
+function take_turn_script(controller, data) {
+    var encounter = getEncounter(controller.state);
+    var action_list = data.call_data.action_list;
+    take_turn(controller, encounter, action_list);
+}  
 
+// assumes that 
+function take_turn(controller, encounter, action_list) {
+    for (var i = 0; i < action_list.length; i++) {
+        var action = action_list[i];
+        take_action(controller, encounter, action);
+    }
+    
+    for (var i = 0; i < action_list.length; i++) {
+        var action = action_list[i];
+        resolve_card(controller, encounter, action);
+    }
+}
+
+function start_combat_script(controller, data) {
+    var enemy_ids = data.call_data.enemy_ids;
+    start_combat(controller, enemy_ids);
+}
+
+function start_combat(controller, enemy_ids) {
+    var encounter = {
+        "type": "combat",
+        "combatants": [controller.state.data.player],
+        "history": []
+    }
+    for (var i = 0; i < ids.length; i++) {
+        var new_character = controller.get_by_type_and_id("character", ids[i]);
+        encounter.combatants.push(new_character);
+    } 
+    controller.state.data.encounter = encounter;
+}
+
+function end_combat(controller) {
+    delete controller.state.data.encounter;
+}
 
 // data = {"call_data": {"attacker": character, "action": action}}
-function takeActionScript(controller, data) {
+// action: {"actor": character, "target": character, "type": string, "value": object | int}
+function take_action_script(controller, data) {
     var encounter = getEncounter(controller.state);
-    var attacker = encounter[data.call_data.attacker];
     var action = data.call_data.action;
-    takeAction(controller, encounter, attacker, action);
+    take_action(controller, encounter, action);
 }
-function takeAction(controller, encounter, attacker, action) {
+function take_action(controller, encounter, action) {
     if(action.type === "card") {
-        playCard(controller, attacker, encounter, action.value);
+        play_card(controller, attacker, encounter, action.value);
     } else if (action.type === "delay") {
         delayTurn(controller, attacker, encounter, action.value);
     } else if (action.type === "action") {
         useAction(controller, attacker, encounter, action.value);
     } else {
-        console.log("takeAction() argument action.value was not a valid type!");
+        console.log("take_action() argument action.value was not a valid type!");
     }
 }
     
@@ -55,11 +100,11 @@ function executeCardEffect(effect_id, controller, card, otherCard) {
     controller.execute_script(script_id, script_args);
 }
 
-function playCard(controller, attacker, encounter, card_index) {
+function play_card(controller, attacker, encounter, card_index) {
     var card = attacker.hand[card_index];
-    console.log("playCard - card:");
+    console.log("play_card - card:");
     console.log(card);
-    executeCardEffect("onPlayCard", controller, card, undefined);
+    executeCardEffect("onplay_card", controller, card, undefined);
     
     // execute "card.play_card 
     var i = encounter.history.length;
@@ -72,7 +117,7 @@ function playCard(controller, attacker, encounter, card_index) {
     removeCardFromHand(controller, attacker, card_index)
 }
 
-function drawCard(controller, character, index) {
+function draw_card(controller, character, index) {
     var card_id = character.deck.pop()
     var new_card = controller.get_by_type_and_id("card", card_id);
     var i = character.hand.length;
@@ -109,14 +154,14 @@ function addCardToDiscard(controller, character, card_id) {
     console.log(character.discard);
 }
     
-function resolveCardScript(controller, data) { 
+function resolve_card_script(controller, data) { 
     var encounter = getEncounter(controller.state);
     var attacker = encounter[data.call_data.attacker];
     var defender = encounter[data.call_data.defender];
-    resolveCard(controller, encounter, attacker, defender);
+    resolve_card(controller, encounter, attacker, defender);
 }
-function resolveCard(controller, encounter, attacker, defender) {
-    // execute card.resolveCard
+function resolve_card(controller, encounter, action) {
+    // execute card.resolve_card
     var defenseStat = 0;
     if (isCard(defender.active_card)) {
         defenseStat = defender.active_card.card_defense;
@@ -147,13 +192,13 @@ function resolveCard(controller, encounter, attacker, defender) {
 }
 
 var gameScrips = [
-    {"game_script_id": "take_action", "script": takeActionScript},
-//    {"game_script_id": "play_card", "script": playCard},
-    {"game_script_id": "resolve_card", "script": resolveCardScript}
+    {"game_script_id": "take_action", "script": take_action_script},
+//    {"game_script_id": "play_card", "script": play_card},
+    {"game_script_id": "resolve_card", "script": resolve_card_script}
 ];
 
 var gameEvent = [
-    {"event_id": "take_action", "game_scripts": [takeAction], "data": {}},
+    {"event_id": "take_action", "game_scripts": [take_action], "data": {}},
     {"event_id": "", "game_scripts": [], "data": {}}
 ];
 
