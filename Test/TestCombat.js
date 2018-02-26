@@ -4,20 +4,20 @@ var sample_card_effect1 = {} // TODO
 var sampleCardEffect2 = {} // TODO
 
 var sample_card_effects = {
-    "onPlayCard": () => {},
-    "onCardPlayedAgainst": () => {},
-    "onCardResolved": () => {},
-    "onCardResolvedAgainst": () => {},
-    "onRemovedFromActive": () => {},
-    "onAttacked": () => {},
-    "onDealsDamage": () => {},
-    "onDamaged": () => {},
-    "onBlocksAttack": () => {},
-    "onAttackBlocked": () => {},
-    "onDiscarded": () => {},
-    "onRemovedFromHand": () => {},
-    "onDrawn": () => {},
-    "onOpponentDraws": () => {}
+    "onPlayCard": "onPlayCard",
+    "onCardPlayedAgainst": "onCardPlayedAgainst",
+    "onCardResolved": "onCardResolved",
+    "onCardResolvedAgainst": "onCardResolvedAgainst",
+    "onRemovedFromActive": "onRemovedFromActive",
+    "onAttacked": "onAttacked",
+    "onDealsDamage": "onDealsDamage",
+    "onDamaged": "onDamaged",
+    "onBlocksAttack": "onBlocksAttack",
+    "onAttackBlocked": "onAttackBlocked",
+    "onDiscarded": "onDiscarded",
+    "onRemovedFromHand": "onRemovedFromHand",
+    "onDrawn": "onDrawn",
+    "onOpponentDraws": "onOpponentDraws",
 }
 
 var sample_card_args = {
@@ -50,7 +50,7 @@ var sampleCard1 = {
 var sampleCard2 = {
     "card_id": "card two", 
     "description": "description two",
-    "card_effects": [sampleCardEffect2],
+//    "card_effects": ,
     "card_attack": 3,
     "card_defense": 2,
     "card_cost": 2
@@ -60,7 +60,7 @@ var character1 = {
     "name": "character1",
     "hand": [sampleCard1],
     "deck": ["card_id1"],
-    "discard": [],
+    "discard": ["discarded card"],
     "hp": 25,
     "initiative": 10,
     "active_card": $.extend(true, {}, sampleCard1)
@@ -88,8 +88,8 @@ var sampleCombatant = {} // TODO
 function MockController() {
     this.scripts_called = []
     this.execute_script = (sid, args) => {
-        console.log(sid);
-        console.log(args);
+        console.log("sid: " + sid);
+        console.log("args: " + args);
         var i = this.scripts_called.length;
         this.scripts_called[i] = [sid, args];
     }
@@ -98,11 +98,64 @@ function MockController() {
     }
 }
 
-function validateScriptWasCalled(assert, mockCtrl, sid, offset) {
+function validateScriptWasCalled(assert, mockCtrl, sid, i) {
     console.log(mockCtrl.scripts_called)
-    var last_script = mockCtrl.scripts_called.length - 1;
-    var sid_called = mockCtrl.scripts_called[last_script - offset][0];
+//    var last_script = mockCtrl.scripts_called.length - 1;
+//    var sid_called = mockCtrl.scripts_called[last_script - offset][0];
+    var sid_called = mockCtrl.scripts_called[i][0]
     assert.equal(sid_called, sid, "script " + sid + " was called at the correct time"); 
+}
+
+function testValidateScriptWasCalled(assert) {
+    var mockMockCtrl = {"scripts_called": [["one", "args"], ["two", "args"], ["three", "args"]]}
+    validateScriptWasCalled(assert, mockMockCtrl, "one", 0);
+    validateScriptWasCalled(assert, mockMockCtrl, "two", 1);
+    validateScriptWasCalled(assert, mockMockCtrl, "three", 2);
+}
+
+function testTakeTurnWithOneAction(assert) {
+    var attacker = $.extend(true, {}, character1);
+    var defender = $.extend(true, {}, character1);
+    var action = {"type": "card", "value": 0, "actor": attacker, "target": defender};
+    var encounter = $.extend(true, {}, sampleEncounter)
+    var mockCtrl = new MockController();
+    
+    // get expected results
+    var discard_len = attacker.discard.length;
+    var hand_len = attacker.hand.length;
+    var starting_active_card = attacker.active_card
+    
+    take_turn(mockCtrl, encounter, [action]); 
+    
+    var bool = attacker.initiative === character1.initiative - sampleCard1.card_cost;
+    assert.ok(bool, "Attacker's initiative is decreased");
+    
+    bool = encounter.history.length === sampleEncounter.history.length + 1;
+    assert.ok(bool, "Encounter History Length Increases");
+    
+    assert.equal(attacker.discard.length, discard_len + 1, "card played increases discard");
+    assert.equal(attacker.hand.length, hand_len - 1, "card played removed from hand");
+    
+    assert.equal(starting_active_card.card_id, attacker.discard.pop(), "discard has previous active card on top");
+    
+    var bool = defender.hp === character1.hp - attacker.active_card.attack;
+    assert.ok(bool, "hp is decreased");
+    
+    console.log(mockCtrl.scripts_called);
+    // hooks from play card
+    validateScriptWasCalled(assert, mockCtrl, "onPlayCard", 0);
+    validateScriptWasCalled(assert, mockCtrl, "onRemovedFromActive", 1);
+    validateScriptWasCalled(assert, mockCtrl, "onRemovedFromHand", 2);
+    validateScriptWasCalled(assert, mockCtrl, "onDiscarded", 3);
+    
+    // hooks from resolve card
+    validateScriptWasCalled(assert, mockCtrl, "onCardResolved", 4);
+    validateScriptWasCalled(assert, mockCtrl, "onCardResolvedAgainst", 5);
+    validateScriptWasCalled(assert, mockCtrl, "onAttacked", 6);
+    validateScriptWasCalled(assert, mockCtrl, "onDealsDamage", 7);
+    validateScriptWasCalled(assert, mockCtrl, "onDamaged", 8);
+    validateScriptWasCalled(assert, mockCtrl, "onRemovedFromHand", 9);
+    validateScriptWasCalled(assert, mockCtrl, "onDiscarded", 10);
 }
 
 function testCardTypes(assert) {
@@ -141,10 +194,14 @@ function testCombatTypes(assert) {
     assert.ok(!isCombatant({}))
 }
 
+function testUndefinedCardArgs() {
+    
+}
+
 function testPlayCards(assert) {
     // setup test data 
-    var action = new CombatAction("card", 0);
     var attacker = $.extend(true, {}, character1);
+    var action = {"type": "card", "value": 0, "actor": attacker};
     var encounter = $.extend(true, {}, sampleEncounter)
     var mockCtrl = new MockController();
     
@@ -153,7 +210,7 @@ function testPlayCards(assert) {
     var hand_len = attacker.hand.length;
     var starting_active_card = attacker.active_card
     
-    takeAction(mockCtrl, encounter, attacker, action); 
+    take_action(mockCtrl, encounter, action); 
     
     var bool = attacker.initiative === character1.initiative - sampleCard1.card_cost;
     assert.ok(bool, "Attacker's initiative is decreased");
@@ -167,8 +224,10 @@ function testPlayCards(assert) {
     assert.equal(starting_active_card.card_id, attacker.discard.pop(), "discard has previous active card on top");
     
     console.log(mockCtrl.scripts_called);
-    validateScriptWasCalled(assert, mockCtrl, "onPlayCard", 1);
-    validateScriptWasCalled(assert, mockCtrl, "onRemovedFromActive", 0);
+    validateScriptWasCalled(assert, mockCtrl, "onPlayCard", 0);
+    validateScriptWasCalled(assert, mockCtrl, "onRemovedFromActive", 1);
+    validateScriptWasCalled(assert, mockCtrl, "onRemovedFromHand", 2);
+    validateScriptWasCalled(assert, mockCtrl, "onDiscarded", 3);
 }
 
 function testDrawCard(assert) {
@@ -178,7 +237,7 @@ function testDrawCard(assert) {
     var card_id = character.deck[character.deck.length-1]
     var mockCtrl = new MockController();
     
-    drawCard(mockCtrl, character, 0);
+    draw_card(mockCtrl, character, 0);
     assert.equal(start_hand + 1, character.hand.length, "hand size increases");
     assert.equal(start_deck - 1, character.deck.length, "deck size decreases");
     var i = character.hand.length - 1;
@@ -194,19 +253,21 @@ function testResolveActionAgainstNull(assert) {
     var attacker = $.extend(true, {}, character1);
     var encounter = $.extend(true, {}, sampleEncounter);
     var mockCtrl = new MockController();
-    takeAction(mockCtrl, attacker, encounter, action); 
+    take_action(mockCtrl, attacker, encounter, action); 
     
     var defender = $.extend(true, {}, character2);
-    resolveCard(mockCtrl, attacker, defender, encounter);
     
-    var bool = obj2.defender.hp === character2.hp - attacker.active_card.attack;
+    var action = {"type": "card", "actor": attacker, "target": defender, "value": 0}
+    resolve_card(mockCtrl, encounter, action);
+    
+    var bool = defender.hp === character2.hp - attacker.active_card.attack;
     assert.ok(bool, "hp is decreased");
     
-    validateScriptWasCalled(assert, mockCtrl, "onCardResolved", 4);
-    validateScriptWasCalled(assert, mockCtrl, "onCardResolvedAgainst", 3);
+    validateScriptWasCalled(assert, mockCtrl, "onCardResolved", 0);
+    validateScriptWasCalled(assert, mockCtrl, "onCardResolvedAgainst", 1);
     validateScriptWasCalled(assert, mockCtrl, "onDealsDamage", 2);
-    validateScriptWasCalled(assert, mockCtrl, "onRemovedFromHand", 1);
-    validateScriptWasCalled(assert, mockCtrl, "onDiscarded", 0);
+    validateScriptWasCalled(assert, mockCtrl, "onRemovedFromHand", 3);
+    validateScriptWasCalled(assert, mockCtrl, "onDiscarded", 4);
 }
 
 function testResolveActionAgainstCard(assert) {
@@ -215,21 +276,23 @@ function testResolveActionAgainstCard(assert) {
     var encounter = $.extend(true, {}, sampleEncounter);
     var mockCtrl = new MockController();
     
-    takeAction(mockCtrl, attacker, encounter, action); 
+    take_action(mockCtrl, attacker, encounter, action); 
     
     var defender = $.extend(true, {}, character2);
-    resolveCard(mockCtrl, attacker, defender, encounter);
+    
+    var action = {"type": "card", "value": 0, "actor": attacker, "target": defender};
+    resolve_card(mockCtrl, encounter, action);
     
     var bool = defender.hp === character2.hp - attacker.active_card.attack;
     assert.ok(bool, "hp is decreased");
     
-    validateScriptWasCalled(assert, mockCtrl, "onCardResolved", 6);
-    validateScriptWasCalled(assert, mockCtrl, "onCardResolvedAgainst", 5);
-    validateScriptWasCalled(assert, mockCtrl, "onAttacked", 4);
+    validateScriptWasCalled(assert, mockCtrl, "onCardResolved", 0);
+    validateScriptWasCalled(assert, mockCtrl, "onCardResolvedAgainst", 1);
+    validateScriptWasCalled(assert, mockCtrl, "onAttacked", 2);
     validateScriptWasCalled(assert, mockCtrl, "onDealsDamage", 3);
-    validateScriptWasCalled(assert, mockCtrl, "onDamaged", 2);
-    validateScriptWasCalled(assert, mockCtrl, "onRemovedFromHand", 1);
-    validateScriptWasCalled(assert, mockCtrl, "onDiscarded", 0);
+    validateScriptWasCalled(assert, mockCtrl, "onDamaged", 4);
+    validateScriptWasCalled(assert, mockCtrl, "onRemovedFromHand", 5);
+    validateScriptWasCalled(assert, mockCtrl, "onDiscarded", 6);
 }   
 
 function testShuffleDeck(assert) {
@@ -294,11 +357,14 @@ function testExecuteCardEffect(assert) {
 
 window.onload = function() {
     console.log("testing combat");
-//	QUnit.test( "Card Types", testCardTypes);
-//	QUnit.test( "Combat Types", testCombatTypes);
+/*
+	QUnit.test( "Card Types", testCardTypes);
+	QUnit.test( "Combat Types", testCombatTypes);
+    QUnit.test("Test Execute Card Effect", testExecuteCardEffect);
 	QUnit.test( "Play Card", testPlayCards);
     QUnit.test( "Shuffle Deck", testShuffleDeck);
     QUnit.test( "Discard Card", testDiscardCard);
-    QUnit.test( "Test Draw Card", testDrawCard);
-    QUnit.test("Test Execute Card Effect", testExecuteCardEffect);
+	QUnit.test( "Test Validate Script Function", testValidateScriptWasCalled); //*/
+	QUnit.test( "Test Take Turn (one action)", testTakeTurnWithOneAction);
+//    QUnit.test( "Test Draw Card", testDrawCard);
 }

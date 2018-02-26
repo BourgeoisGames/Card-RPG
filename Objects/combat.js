@@ -54,6 +54,8 @@ function take_action_script(controller, data) {
     take_action(controller, encounter, action);
 }
 function take_action(controller, encounter, action) {
+    var attacker = action.actor;
+    console.log("take action: type = " + action.type);
     if(action.type === "card") {
         play_card(controller, attacker, encounter, action.value);
     } else if (action.type === "delay") {
@@ -104,11 +106,10 @@ function play_card(controller, attacker, encounter, card_index) {
     var card = attacker.hand[card_index];
     console.log("play_card - card:");
     console.log(card);
-    executeCardEffect("onplay_card", controller, card, undefined);
+    executeCardEffect("onPlayCard", controller, card, undefined);
     
     // execute "card.play_card 
-    var i = encounter.history.length;
-    encounter.history[i] = {"character": attacker, "card": card};
+    encounter.history.push({"character": attacker, "card": card});
     
     executeCardEffect("onRemovedFromActive", controller, attacker.active_card, card);
     attacker.previousCard = attacker.active_card;
@@ -142,8 +143,8 @@ function removeCardFromHand(controller, character, index) {
     character.hand.splice(index, 1);
     console.log(character);
     executeCardEffect("onRemovedFromHand", controller, card, undefined);
-    var i = character.discard.length;
-    character.discard[i] = card.card_id;
+    
+    character.discard.push(card.card_id);
     executeCardEffect("onDiscarded", controller, card, undefined);
 }
 function addCardToDiscard(controller, character, card_id) {
@@ -163,6 +164,8 @@ function resolve_card_script(controller, data) {
 function resolve_card(controller, encounter, action) {
     // execute card.resolve_card
     var defenseStat = 0;
+    var attacker = action.actor;
+    var defender = action.target;    
     if (isCard(defender.active_card)) {
         defenseStat = defender.active_card.card_defense;
     }
