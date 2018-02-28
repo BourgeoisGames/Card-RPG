@@ -9,7 +9,7 @@ function take_turn_script(controller, data) {
     var encounter = getEncounter(controller.state);
     var action_list = data.call_data.action_list;
     take_turn(controller, encounter, action_list);
-}  
+}
 
 // assumes that 
 function take_turn(controller, encounter, action_list) {
@@ -55,28 +55,69 @@ function take_action_script(controller, data) {
 }
 function take_action(controller, encounter, action) {
     var attacker = action.actor;
+	var defender = action.target;
     console.log("take action: type = " + action.type);
     if(action.type === "card") {
-        play_card(controller, attacker, encounter, action.value);
+        play_card(controller, attacker, defender, encounter, action.value);
     } else if (action.type === "delay") {
-        delayTurn(controller, attacker, encounter, action.value);
-    } else if (action.type === "action") {
-        useAction(controller, attacker, encounter, action.value);
+        delay_turn(controller, attacker, encounter, action.value);
+    } else if (action.type === "ability") {
+        use_ability(controller, attacker, encounter, action.value);
     } else {
         console.log("take_action() argument action.value was not a valid type!");
     }
 }
+
+function start_new_round_script(controller, data) {
+    var encounter = getEncounter(controller.state);
+	start_new_round(controller, encounter);
+}
+function start_new_round(controller, encounter) {
+	for (var i = 0; i < encounter.combatants.length; i++) {
+		var combatant = encounter.combatants[i];
+		// Draw up to hand size
+		var card_draw = combatant.hand_size - combatant.hand.length;
+		draw_cards(controller, combatant, card_draw);
+		// reset initiative
+		combatant.initiatve = combatant.base_initiative;
+	}
+}
+
+function is_round_over_script(controller, data) {
+    var encounter = getEncounter(controller.state);
+	return is_round_over(controller, encounter);
+}
+function is_round_over(controller, encounter) {
+	for (var i = 0; i < encounter.combatants.length; i++) {
+		var character = encounter.combatants[i]
+		if (character_can_act(character)) { return true; }
+	}
+	return false;
+}
+
+function character_can_act(character) {
+	if (character.hand.length <= 0 || character.initiative <= 0) {
+		return false;
+	}
+	var min_cost = Number.MAX_SAFE_INTEGER;
+	for (var i = 0; i < character.hand.length) {
+		var cost = character.hand[i].card_cost;
+		min_cost = min(min_cost, cost);
+	}
+	return character.initiative > cost;
+}
     
-function useAction(controller, attacker, encounter, index) {
+function use_ability(controller, attacker, encounter, index) {
     // TODO
 }
 
-function delayTurn(controller, attacker, encounter, amountDelayed) {
+function delay_turn(controller, attacker, encounter, amountDelayed) {
     // TODO
 }
 
-function getCardEffectArgs(effect_id, card) {
-    console.log("getCardEffectArgs - card:");
+function get_card_effect_args(effect_id, card) {
+    console.log("get_card_effect_args - card:");
+    console.log("DEPRICATED!");
     console.log(card);
     if (null === card || undefined === card) { return []; }
     if ("undefined" === typeof(card.effect_args)) { return []; }
@@ -86,44 +127,90 @@ function getCardEffectArgs(effect_id, card) {
     return args;
 }
 
-function executeCardEffect(effect_id, controller, card, otherCard) {
-    console.log("executeCardEffect - card:");
+function execute_card_effect(effect_id, controller, card, hook_args) {
+    console.log("execute_card_effect - card:");
     console.log(card);
     if (typeof(card) === "undefined") { return; }
     if (typeof(card.card_effects) === "undefined") { return; }
-    var cardArgs = getCardEffectArgs(effect_id, card);
-    var script_id = card.card_effects[effect_id]
+	var script_ref = card.card_effects[effect_id];
+	if (typeof(script_ref) === "undefined") { return; }
+    //var cardArgs = get_card_effect_args(effect_id, card);
+    var script_id = script_ref[0]
+	var card_args = script_ref[1]
     var script_args = {
         "controller": controller,
         "card": card,
-        "target": otherCard,
-        "card_args": cardArgs
-    };
+        "hook_args": hook_args,
+        "card_args": card_args
+    }; //*/
     controller.execute_script(script_id, script_args);
 }
 
-function play_card(controller, attacker, encounter, card_index) {
+// {
+//  "name": string,
+//  "description": string,
+//  "hidden": bool,
+//  "duration": int,
+//  "hooks": {
+//    String hook: [
+//	  String scriptId,
+//	  Array args
+//	]
+//  }
+
+function execute_one_status(hook_id, controller, effect, character) {
+	console.log(character.name + " effect: " + hook_id);
+	var script_info = effect.hooks[hook_id];
+	if (typeof(script_info) === "undefined") { return; }
+	var script_id = script_info[0];
+	var script_args = script_info[1];
+	// add 
+	script_args.call_data.character = character;
+	controller.execute_script(script_id, script_args)
+}
+
+function resolve_statuses(hook_id, controller, character) {
+	if (typeof(character.status_effects) === "undefined") {
+		console.log("character " + character.name + " has no status effects");
+		return;
+	}
+	for (var i = 0; i < character.status_effects.length; i++) {
+		var effect = character.status_effects[i];
+		execute_one_status(hook_id, controller, effect, character);
+	}
+	
+}
+
+function play_card(controller, attacker, target, encounter, card_index) {
     var card = attacker.hand[card_index];
     console.log("play_card - card:");
     console.log(card);
-    executeCardEffect("onPlayCard", controller, card, undefined);
+	var hook_args = {"actor": attacker, "target": target}
+    execute_card_effect("onPlayCard", controller, card, hook_args);
+	resolve_statuses("onPlayCard", controller, attacker);
     
     // execute "card.play_card 
     encounter.history.push({"character": attacker, "card": card});
-    
-    executeCardEffect("onRemovedFromActive", controller, attacker.active_card, card);
+	hook_args.card_replaced_with = card;
+    execute_card_effect("onRemovedFromActive", controller, attacker.active_card, hook_args);
     attacker.previousCard = attacker.active_card;
     attacker.active_card = card;
     attacker.initiative -= card.card_cost;
-    removeCardFromHand(controller, attacker, card_index)
+    remove_card_from_hand(controller, attacker, card_index)
 }
 
-function draw_card(controller, character, index) {
+function draw_cards(controller, character, numb_cards) {
+	for (var i = 0; i < numb_cards; i++) {
+		draw_one_card(controller, character);
+	}
+}
+
+function draw_one_card(controller, character) {
     var card_id = character.deck.pop()
     var new_card = controller.get_by_type_and_id("card", card_id);
-    var i = character.hand.length;
-    character.hand[i] = new_card;
-    executeCardEffect("onDrawn", controller, new_card, undefined);
+    character.hand.push(new_card);
+	var hook_args = {"actor": character}
+    execute_card_effect("onDrawn", controller, new_card, hook_args);
 }
 
 function shuffleDeck(controller, character) {
@@ -137,21 +224,22 @@ function shuffleDeck(controller, character) {
     character.deck = new_deck;
 }
 
-function removeCardFromHand(controller, character, index) {
+function remove_card_from_hand(controller, character, index) {
     var card = character.hand[index];
-    console.log("removeCardFromHand: card; " + card);
+    console.log("remove_card_from_hand: card; " + card);
     character.hand.splice(index, 1);
     console.log(character);
-    executeCardEffect("onRemovedFromHand", controller, card, undefined);
+	var hook_args = {"actor": character}
+    execute_card_effect("onRemovedFromHand", controller, card, hook_args);
     
     character.discard.push(card.card_id);
-    executeCardEffect("onDiscarded", controller, card, undefined);
+    execute_card_effect("onDiscarded", controller, card, hook_args);
 }
-function addCardToDiscard(controller, character, card_id) {
+function add_card_to_discard(controller, character, card_id) {
     // NOTE: does not invoke "onDiscarded" scripts, this should be invoked
     // after this function is called. Since this function does not take a card 
     // (which is required for invoking the card effect)
-    console.log("combar.js - addCardToDiscard");
+    console.log("combar.js - add_card_to_discard");
     console.log(character.discard);
 }
     
@@ -174,24 +262,29 @@ function resolve_card(controller, encounter, action) {
         damage = 0;
     }
     defender.hp -= damage;
-    executeCardEffect("onCardResolved", controller, attacker.active_card, defender.active_card);
+	var hook_args = {"actor": attacker, "target": defender, "encounter": encounter}
+    execute_card_effect("onCardResolved", controller, attacker.active_card, hook_args);
     
     if (isCard(defender.active_card)) {
-        executeCardEffect("onAttacked", controller, defender.active_card, attacker.active_card);
+        execute_card_effect("onAttacked", controller, defender.active_card, hook_args);
         if (damage > 0) {
-            executeCardEffect("onDealsDamage", controller, attacker.active_card, defender.active_card);
-            executeCardEffect("onDamaged", controller, defender.active_card, attacker.active_card);
+            execute_card_effect("onDealsDamage", controller, attacker.active_card, hook_args);
+            execute_card_effect("onDamaged", controller, defender.active_card, hook_args);
         } else if (attacker.active_card.card_attack != 0) {
-            executeCardEffect("onAttackBlocked", controller, attacker.active_card, defender.active_card);
-            executeCardEffect("onBlocksAttack", controller, defender.active_card, attacker.active_card);
+            execute_card_effect("onAttackBlocked", controller, attacker.active_card, hook_args);
+            execute_card_effect("onBlocksAttack", controller, defender.active_card, hook_args);
         }
     } else {
         if (damage > 0) {
-            executeCardEffect("onDealsDamage", controller, attacker.active_card, defender.active_card);
+            execute_card_effect("onDealsDamage", controller, attacker.active_card, hook_args);
         } else if (attacker.active_card.card_attack != 0) {
-            executeCardEffect("onAttackBlocked", controller, attacker.active_card, defender.active_card);
+            execute_card_effect("onAttackBlocked", controller, attacker.active_card, hook_args);
         }
     }
+}
+
+function is_character(obj) {
+	return false;
 }
 
 var gameScrips = [

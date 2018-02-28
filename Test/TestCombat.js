@@ -4,37 +4,43 @@ var sample_card_effect1 = {} // TODO
 var sampleCardEffect2 = {} // TODO
 
 var sample_card_effects = {
-    "onPlayCard": "onPlayCard",
-    "onCardPlayedAgainst": "onCardPlayedAgainst",
-    "onCardResolved": "onCardResolved",
-    "onCardResolvedAgainst": "onCardResolvedAgainst",
-    "onRemovedFromActive": "onRemovedFromActive",
-    "onAttacked": "onAttacked",
-    "onDealsDamage": "onDealsDamage",
-    "onDamaged": "onDamaged",
-    "onBlocksAttack": "onBlocksAttack",
-    "onAttackBlocked": "onAttackBlocked",
-    "onDiscarded": "onDiscarded",
-    "onRemovedFromHand": "onRemovedFromHand",
-    "onDrawn": "onDrawn",
-    "onOpponentDraws": "onOpponentDraws",
+    "onPlayCard": ["onPlayCard", ["args_onPlayCard"]],
+    "onCardPlayedAgainst": ["onCardPlayedAgainst", ["args_onCardPlayedAgainst"]],
+    "onCardResolved": ["onCardResolved", ["args_onCardResolved"]],
+    "onCardResolvedAgainst": ["onCardResolvedAgainst", ["args_onCardResolvedAgainst"]],
+    "onRemovedFromActive": ["onRemovedFromActive", ["args_onRemovedFromActive"]],
+    "onAttacked": ["onAttacked", ["args_onAttacked"]],
+    "onDealsDamage": ["onDealsDamage", ["args_onDealsDamage"]],
+    "onDamaged": ["onDamaged", ["args_onDamaged"]],
+    "onBlocksAttack": ["onBlocksAttack", ["args_onBlocksAttack"]],
+    "onAttackBlocked": ["onAttackBlocked", ["args_onAttackBlocked"]],
+    "onDiscarded": ["onDiscarded", ["args_onDiscarded"]],
+    "onRemovedFromHand": ["onRemovedFromHand", ["args_onRemovedFromHand"]],
+    "onDrawn": ["onDrawn", ["args_onDrawn"]],
+    "onOpponentDraws": ["onOpponentDraws", ["args_onOpponentDraws"]],
 }
 
-var sample_card_args = {
-    "onPlayCard": ["onPlayCard"],
-    "onCardPlayedAgainst": ["onCardPlayedAgainst"],
-    "onCardResolved": ["onCardResolved"],
-    "onCardResolvedAgainst": ["onCardResolvedAgainst"],
-    "onRemovedFromActive": ["onRemovedFromActive"],
-    "onAttacked": ["onAttacked"],
-    "onDealsDamage": ["onDealsDamage"],
-    "onDamaged": ["onDamaged"],
-    "onBlocksAttack": ["onBlocksAttack"],
-    "onAttackBlocked": ["onAttackBlocked"],
-    "onDiscarded": ["onDiscarded"],
-    "onRemovedFromHand": ["onRemovedFromHand"],
-    "onDrawn": ["onDrawn"],
-    "onOpponentDraws": ["onOpponentDraws"]
+var sample_status_effect = {
+    "name": "sample status effect",
+    "description": "this is a sample status effect for testing only",
+    "hidden": false,
+    "duration": 2,
+    "hooks": {
+		"onPlayCard": ["STATUSonPlayCard", ["args_onPlayCard"]],
+		"onCardPlayedAgainst": ["STATUSonCardPlayedAgainst", ["args_onCardPlayedAgainst"]],
+		"onCardResolved": ["STATUSonCardResolved", ["args_onCardResolved"]],
+		"onCardResolvedAgainst": ["STATUSonCardResolvedAgainst", ["args_onCardResolvedAgainst"]],
+		"onRemovedFromActive": ["STATUSonRemovedFromActive", ["args_onRemovedFromActive"]],
+		"onAttacked": ["STATUSonAttacked", ["args_onAttacked"]],
+		"onDealsDamage": ["STATUSonDealsDamage", ["args_onDealsDamage"]],
+		"onDamaged": ["STATUSonDamaged", ["args_onDamaged"]],
+		"onBlocksAttack": ["STATUSonBlocksAttack", ["args_onBlocksAttack"]],
+		"onAttackBlocked": ["STATUSonAttackBlocked", ["args_onAttackBlocked"]],
+		"onDiscarded": ["STATUSonDiscarded", ["args_onDiscarded"]],
+		"onRemovedFromHand": ["STATUSonRemovedFromHand", ["args_onRemovedFromHand"]],
+		"onDrawn": ["STATUSonDrawn", ["args_onDrawn"]],
+		"onOpponentDraws": ["STATUSonOpponentDraws", ["args_onOpponentDraws"]],
+	}
 }
 
 var sampleCard1 = {
@@ -237,7 +243,7 @@ function testDrawCard(assert) {
     var card_id = character.deck[character.deck.length-1]
     var mockCtrl = new MockController();
     
-    draw_card(mockCtrl, character, 0);
+    draw_one_card(mockCtrl, character, 0);
     assert.equal(start_hand + 1, character.hand.length, "hand size increases");
     assert.equal(start_deck - 1, character.deck.length, "deck size decreases");
     var i = character.hand.length - 1;

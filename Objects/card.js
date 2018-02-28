@@ -41,3 +41,28 @@ function isCard(obj) {
  */
  // &&& field not yet implemented in the pipeline
  
+ 
+
+/* Status Effect Hooks
+ * 
+ * &&& onPlayCard               - resolves as soon as the card is played
+ * &&& onCardPlayedAgainst      - resolves as soon as the card is played
+ * &&& onCardResolved           - resolves while the card is resolving
+ * &&& onCardResolvedAgainst    - resolves while the card is resolving
+ * &&& onRemovedFromActive      - resolves when the card is replaced by another card as
+ *                             your active card
+ * &&& onAttacked               - resolves when an attack is made, while this card is 
+ *                             active
+ * &&& onDealsDamage            - resolves when this card is resolved, and successfully 
+ *                             deals damage
+ * &&& onDamaged                - resolves when another card resolves, while this card is 
+ *                             active, which deals damage.
+ * &&& onBlocksAttack           - resolves when an attack, with at least 1 attack is made,
+ *                             that deals no damage
+ * &&& onAttackBlocked          - resolves when card is played, but fails to deal damage
+ * &&& onDiscarded              - resolves as soon as the card is added to the discard
+ * &&& onRemovedFromHand        - resolves as soon as the card is removed from the hand.
+ * &&& onDrawCard               - resolves as soon as the card is drawn from the deck
+ * &&& onOpponentDraws          - resolves as soon as the card is drawn from the deck
+ */
+ // &&& field not yet implemented in the pipeline
