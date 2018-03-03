@@ -1,0 +1,39 @@
+<template bindable="game">
+
+<div class="container" style="background-color: gray; padding: 25px 5px 5px 25px; border: 3px outset gold; color: gold; border-radius: 15px">
+	<div class="row">
+		<h3 class="col-sm-11">${game.state.data.skill_event.skill_test.description}</h3>
+	</div>
+	<hr class="row">
+	<div class="row container">
+		<h4 class="row">Challenges:</h4>
+		<div class="row" repeat.for="challenge of game.state.data.skill_event.skill_test.components" style="border: 2px outset gold; background-color: DarkGray; margin-right:15px;">
+			<h3 class="col-md-5">${challenge.tag}</h3>
+			<h3 class="col-md-5">${challenge.level}</h3>
+		</div>
+	</div>
+	<hr class="row">
+	<div class="row">
+		<h4 style="color: white" class="col-md-6 offset-md-4">
+			Select cards to use:
+		</h4>
+	</div>
+	<div class="row">
+		<div class="col-md-2 container" style="padding: 10px; border: 2px outset gold; border-radius: 15px; background-color: LightGray; color: DarkGoldenRod" repeat.for="card of hand" click.trigger="select_card(card)">
+			<h5 class="row" style="color: green;" if.bind="card.selected">&lt Selected &gt</h5>
+			<h4 class="row">${card.name}</h4>
+			<img class="row" src="${card.img}" style="width: 100px; border: 1px outset gold; background-color: white">
+			<p class="row">${card.description}</p>
+			<hr class="row">
+			<div class="row">
+				<span class="col-sm-6" repeat.for="tag of card.tags" style="color: black; border: 1px outset black; border-radius: 15px; background-color: LightBlue">${tag}</span>
+			</div>
+		</div>
+	</div>
+	<hr class="row">
+	<div class="row">
+		<h2 class="col-md-4" click.trigger="play_cards()" style="background-color: LightBlue; border: 4px outset LightGray; border-radius: 10px;">Play Selected Cards</h2>
+	</div>
+</div>
+
+</template>

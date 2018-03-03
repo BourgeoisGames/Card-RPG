@@ -1,8 +1,13 @@
 <template>
 <require from="./roomview.html"></require>
+<require from="./skillview"></require>
 
 <div click.trigger="send_click()" style="text-align: center;">
-	<roomview room.bind="game_state.room"></roomview>
+	<roomview room.bind="game_state.room" if.bind="!game_state.skill_event"></roomview>
+	<skillview 
+	game.bind="game"
+	if.bind="game_state.skill_event">
+	</skillview>
 </div>
 
 </template>
