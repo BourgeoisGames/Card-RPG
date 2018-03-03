@@ -312,3 +312,8 @@ var gameEvent = [
 ];
 
 exports = gameScrips;
+
+
+//exports function thingy(controller) {
+//    controller.addScript(foo);
+//}
