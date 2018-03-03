@@ -105,7 +105,8 @@ function MockController() {
 }
 
 function validate_script_was_called(assert, mockCtrl, sid, i) {
-    console.log(mockCtrl.scripts_called)
+    console.log("validate_script_was_called(assert, mockCtrl, " + sid + ", " + i);
+    console.log(mockCtrl.scripts_called);
 //    var last_script = mockCtrl.scripts_called.length - 1;
 //    var sid_called = mockCtrl.scripts_called[last_script - offset][0];
     var sid_called = mockCtrl.scripts_called[i][0]
@@ -155,10 +156,6 @@ function testTakeTurnWithStatusEffect(assert) {
     validate_script_was_called(assert, mockCtrl, "onDealsDamage", 15);
     validate_script_was_called(assert, mockCtrl, "status_onDamaged", 16);
     validate_script_was_called(assert, mockCtrl, "onDamaged", 17);
-    validate_script_was_called(assert, mockCtrl, "status_onRemovedFromHand", 18);
-    validate_script_was_called(assert, mockCtrl, "onRemovedFromHand", 19);
-    validate_script_was_called(assert, mockCtrl, "status_onDiscarded", 20);
-    validate_script_was_called(assert, mockCtrl, "onDiscarded", 21);
 }
 
 function testTakeTurnWithOneAction(assert) {
