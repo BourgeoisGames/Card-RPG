@@ -17,37 +17,37 @@ var sample_card_effects = {
     "onDiscarded": ["onDiscarded", ["args_onDiscarded"]],
     "onRemovedFromHand": ["onRemovedFromHand", ["args_onRemovedFromHand"]],
     "onDrawn": ["onDrawn", ["args_onDrawn"]],
-    "onOpponentDraws": ["onOpponentDraws", ["args_onOpponentDraws"]],
+    "onOpponentDraws": ["onOpponentDraws", ["args_onOpponentDraws"]]
 }
 
 var sample_status_effect = {
-    "name": "sample status effect",
-    "description": "this is a sample status effect for testing only",
-    "hidden": false,
     "duration": 2,
+    "name": "Test Status",
+    "description": "This status effect is for testing",
+    "hidden": false,
     "hooks": {
-		"onPlayCard": ["STATUSonPlayCard", ["args_onPlayCard"]],
-		"onCardPlayedAgainst": ["STATUSonCardPlayedAgainst", ["args_onCardPlayedAgainst"]],
-		"onCardResolved": ["STATUSonCardResolved", ["args_onCardResolved"]],
-		"onCardResolvedAgainst": ["STATUSonCardResolvedAgainst", ["args_onCardResolvedAgainst"]],
-		"onRemovedFromActive": ["STATUSonRemovedFromActive", ["args_onRemovedFromActive"]],
-		"onAttacked": ["STATUSonAttacked", ["args_onAttacked"]],
-		"onDealsDamage": ["STATUSonDealsDamage", ["args_onDealsDamage"]],
-		"onDamaged": ["STATUSonDamaged", ["args_onDamaged"]],
-		"onBlocksAttack": ["STATUSonBlocksAttack", ["args_onBlocksAttack"]],
-		"onAttackBlocked": ["STATUSonAttackBlocked", ["args_onAttackBlocked"]],
-		"onDiscarded": ["STATUSonDiscarded", ["args_onDiscarded"]],
-		"onRemovedFromHand": ["STATUSonRemovedFromHand", ["args_onRemovedFromHand"]],
-		"onDrawn": ["STATUSonDrawn", ["args_onDrawn"]],
-		"onOpponentDraws": ["STATUSonOpponentDraws", ["args_onOpponentDraws"]],
-	}
+        "status_onPlayCard": ["status_onPlayCard", ["args_onPlayCard"]],
+        "status_onCardPlayedAgainst": ["status_onCardPlayedAgainst", ["args_onCardPlayedAgainst"]],
+        "status_onCardResolved": ["status_onCardResolved", ["args_onCardResolved"]],
+        "status_onCardResolvedAgainst": ["status_onCardResolvedAgainst", ["args_onCardResolvedAgainst"]],
+        "status_onRemovedFromActive": ["status_onRemovedFromActive", ["args_onRemovedFromActive"]],
+        "status_onAttacked": ["status_onAttacked", ["args_onAttacked"]],
+        "status_onDealsDamage": ["status_onDealsDamage", ["args_onDealsDamage"]],
+        "status_onDamaged": ["status_onDamaged", ["args_onDamaged"]],
+        "status_onBlocksAttack": ["status_onBlocksAttack", ["args_onBlocksAttack"]],
+        "status_onAttackBlocked": ["status_onAttackBlocked", ["args_onAttackBlocked"]],
+        "status_onDiscarded": ["status_onDiscarded", ["args_onDiscarded"]],
+        "status_onRemovedFromHand": ["status_onRemovedFromHand", ["args_onRemovedFromHand"]],
+        "status_onDrawn": ["status_onDrawn", ["args_onDrawn"]],
+        "status_onOpponentDraws": ["status_onOpponentDraws", ["args_onOpponentDraws"]]
+    },
 }
+
 
 var sampleCard1 = {
     "card_id": "card one", 
     "description": "description one",
     "card_effects": sample_card_effects,
-    "card_args": sample_card_args,
     "card_attack": 2,
     "card_defense": 1,
     "card_cost": 1
@@ -104,7 +104,7 @@ function MockController() {
     }
 }
 
-function validateScriptWasCalled(assert, mockCtrl, sid, i) {
+function validate_script_was_called(assert, mockCtrl, sid, i) {
     console.log(mockCtrl.scripts_called)
 //    var last_script = mockCtrl.scripts_called.length - 1;
 //    var sid_called = mockCtrl.scripts_called[last_script - offset][0];
@@ -112,11 +112,53 @@ function validateScriptWasCalled(assert, mockCtrl, sid, i) {
     assert.equal(sid_called, sid, "script " + sid + " was called at the correct time"); 
 }
 
-function testValidateScriptWasCalled(assert) {
+function testvalidate_script_was_called(assert) {
     var mockMockCtrl = {"scripts_called": [["one", "args"], ["two", "args"], ["three", "args"]]}
-    validateScriptWasCalled(assert, mockMockCtrl, "one", 0);
-    validateScriptWasCalled(assert, mockMockCtrl, "two", 1);
-    validateScriptWasCalled(assert, mockMockCtrl, "three", 2);
+    validate_script_was_called(assert, mockMockCtrl, "one", 0);
+    validate_script_was_called(assert, mockMockCtrl, "two", 1);
+    validate_script_was_called(assert, mockMockCtrl, "three", 2);
+}
+
+function testTakeTurnWithStatusEffect(assert) {
+    var attacker = $.extend(true, {}, character1);
+    attacker.status_effects = [ $.extend(true, {}, sample_status_effect) ];
+    var defender = $.extend(true, {}, character1);
+    defender.status_effects = [ $.extend(true, {}, sample_status_effect) ];
+    var action = {"type": "card", "value": 0, "actor": attacker, "target": defender};
+    var encounter = $.extend(true, {}, sampleEncounter)
+    var mockCtrl = new MockController();
+    
+    // get expected results
+    var discard_len = attacker.discard.length;
+    var hand_len = attacker.hand.length;
+    var starting_active_card = attacker.active_card
+    
+    take_turn(mockCtrl, encounter, [action]);
+
+    validate_script_was_called(assert, mockCtrl, "status_onPlayCard", 0);
+    validate_script_was_called(assert, mockCtrl, "onPlayCard", 1);
+    validate_script_was_called(assert, mockCtrl, "status_onRemovedFromActive", 2);
+    validate_script_was_called(assert, mockCtrl, "onRemovedFromActive", 3);
+    validate_script_was_called(assert, mockCtrl, "status_onRemovedFromHand", 4);
+    validate_script_was_called(assert, mockCtrl, "onRemovedFromHand", 5);
+    validate_script_was_called(assert, mockCtrl, "status_onDiscarded", 6);
+    validate_script_was_called(assert, mockCtrl, "onDiscarded", 7);
+    
+    // hooks from resolve card
+    validate_script_was_called(assert, mockCtrl, "status_onCardResolved", 8);
+    validate_script_was_called(assert, mockCtrl, "onCardResolved", 9);
+    validate_script_was_called(assert, mockCtrl, "status_onCardResolvedAgainst", 10);
+    validate_script_was_called(assert, mockCtrl, "onCardResolvedAgainst", 11);
+    validate_script_was_called(assert, mockCtrl, "status_onAttacked", 12);
+    validate_script_was_called(assert, mockCtrl, "onAttacked", 13);
+    validate_script_was_called(assert, mockCtrl, "status_onDealsDamage", 14);
+    validate_script_was_called(assert, mockCtrl, "onDealsDamage", 15);
+    validate_script_was_called(assert, mockCtrl, "status_onDamaged", 16);
+    validate_script_was_called(assert, mockCtrl, "onDamaged", 17);
+    validate_script_was_called(assert, mockCtrl, "status_onRemovedFromHand", 18);
+    validate_script_was_called(assert, mockCtrl, "onRemovedFromHand", 19);
+    validate_script_was_called(assert, mockCtrl, "status_onDiscarded", 20);
+    validate_script_was_called(assert, mockCtrl, "onDiscarded", 21);
 }
 
 function testTakeTurnWithOneAction(assert) {
@@ -131,7 +173,7 @@ function testTakeTurnWithOneAction(assert) {
     var hand_len = attacker.hand.length;
     var starting_active_card = attacker.active_card
     
-    take_turn(mockCtrl, encounter, [action]); 
+    take_turn(mockCtrl, encounter, [action]);
     
     var bool = attacker.initiative === character1.initiative - sampleCard1.card_cost;
     assert.ok(bool, "Attacker's initiative is decreased");
@@ -149,19 +191,17 @@ function testTakeTurnWithOneAction(assert) {
     
     console.log(mockCtrl.scripts_called);
     // hooks from play card
-    validateScriptWasCalled(assert, mockCtrl, "onPlayCard", 0);
-    validateScriptWasCalled(assert, mockCtrl, "onRemovedFromActive", 1);
-    validateScriptWasCalled(assert, mockCtrl, "onRemovedFromHand", 2);
-    validateScriptWasCalled(assert, mockCtrl, "onDiscarded", 3);
+    validate_script_was_called(assert, mockCtrl, "onPlayCard", 0);
+    validate_script_was_called(assert, mockCtrl, "onRemovedFromActive", 1);
+    validate_script_was_called(assert, mockCtrl, "onRemovedFromHand", 2);
+    validate_script_was_called(assert, mockCtrl, "onDiscarded", 3);
     
     // hooks from resolve card
-    validateScriptWasCalled(assert, mockCtrl, "onCardResolved", 4);
-    validateScriptWasCalled(assert, mockCtrl, "onCardResolvedAgainst", 5);
-    validateScriptWasCalled(assert, mockCtrl, "onAttacked", 6);
-    validateScriptWasCalled(assert, mockCtrl, "onDealsDamage", 7);
-    validateScriptWasCalled(assert, mockCtrl, "onDamaged", 8);
-    validateScriptWasCalled(assert, mockCtrl, "onRemovedFromHand", 9);
-    validateScriptWasCalled(assert, mockCtrl, "onDiscarded", 10);
+    validate_script_was_called(assert, mockCtrl, "onCardResolved", 4);
+    validate_script_was_called(assert, mockCtrl, "onCardResolvedAgainst", 5);
+    validate_script_was_called(assert, mockCtrl, "onAttacked", 6);
+    validate_script_was_called(assert, mockCtrl, "onDealsDamage", 7);
+    validate_script_was_called(assert, mockCtrl, "onDamaged", 8);
 }
 
 function testCardTypes(assert) {
@@ -230,10 +270,10 @@ function testPlayCards(assert) {
     assert.equal(starting_active_card.card_id, attacker.discard.pop(), "discard has previous active card on top");
     
     console.log(mockCtrl.scripts_called);
-    validateScriptWasCalled(assert, mockCtrl, "onPlayCard", 0);
-    validateScriptWasCalled(assert, mockCtrl, "onRemovedFromActive", 1);
-    validateScriptWasCalled(assert, mockCtrl, "onRemovedFromHand", 2);
-    validateScriptWasCalled(assert, mockCtrl, "onDiscarded", 3);
+    validate_script_was_called(assert, mockCtrl, "onPlayCard", 0);
+    validate_script_was_called(assert, mockCtrl, "onRemovedFromActive", 1);
+    validate_script_was_called(assert, mockCtrl, "onRemovedFromHand", 2);
+    validate_script_was_called(assert, mockCtrl, "onDiscarded", 3);
 }
 
 function testDrawCard(assert) {
@@ -250,8 +290,8 @@ function testDrawCard(assert) {
     // this test is bad because it tests the card returned by a mock function.
     // assert.equal(card_id, character.hand[i].card_id, "top card drawn");
     
-    validateScriptWasCalled(assert, mockCtrl, "onDrawn", 0);
-    validateScriptWasCalled(assert, mockCtrl, "onOpponentDraws", 1);
+    validate_script_was_called(assert, mockCtrl, "onDrawn", 0);
+    validate_script_was_called(assert, mockCtrl, "onOpponentDraws", 1);
 }
 
 function testResolveActionAgainstNull(assert) {
@@ -269,11 +309,11 @@ function testResolveActionAgainstNull(assert) {
     var bool = defender.hp === character2.hp - attacker.active_card.attack;
     assert.ok(bool, "hp is decreased");
     
-    validateScriptWasCalled(assert, mockCtrl, "onCardResolved", 0);
-    validateScriptWasCalled(assert, mockCtrl, "onCardResolvedAgainst", 1);
-    validateScriptWasCalled(assert, mockCtrl, "onDealsDamage", 2);
-    validateScriptWasCalled(assert, mockCtrl, "onRemovedFromHand", 3);
-    validateScriptWasCalled(assert, mockCtrl, "onDiscarded", 4);
+    validate_script_was_called(assert, mockCtrl, "onCardResolved", 0);
+    validate_script_was_called(assert, mockCtrl, "onCardResolvedAgainst", 1);
+    validate_script_was_called(assert, mockCtrl, "onDealsDamage", 2);
+    validate_script_was_called(assert, mockCtrl, "onRemovedFromHand", 3);
+    validate_script_was_called(assert, mockCtrl, "onDiscarded", 4);
 }
 
 function testResolveActionAgainstCard(assert) {
@@ -292,13 +332,13 @@ function testResolveActionAgainstCard(assert) {
     var bool = defender.hp === character2.hp - attacker.active_card.attack;
     assert.ok(bool, "hp is decreased");
     
-    validateScriptWasCalled(assert, mockCtrl, "onCardResolved", 0);
-    validateScriptWasCalled(assert, mockCtrl, "onCardResolvedAgainst", 1);
-    validateScriptWasCalled(assert, mockCtrl, "onAttacked", 2);
-    validateScriptWasCalled(assert, mockCtrl, "onDealsDamage", 3);
-    validateScriptWasCalled(assert, mockCtrl, "onDamaged", 4);
-    validateScriptWasCalled(assert, mockCtrl, "onRemovedFromHand", 5);
-    validateScriptWasCalled(assert, mockCtrl, "onDiscarded", 6);
+    validate_script_was_called(assert, mockCtrl, "onCardResolved", 0);
+    validate_script_was_called(assert, mockCtrl, "onCardResolvedAgainst", 1);
+    validate_script_was_called(assert, mockCtrl, "onAttacked", 2);
+    validate_script_was_called(assert, mockCtrl, "onDealsDamage", 3);
+    validate_script_was_called(assert, mockCtrl, "onDamaged", 4);
+    validate_script_was_called(assert, mockCtrl, "onRemovedFromHand", 5);
+    validate_script_was_called(assert, mockCtrl, "onDiscarded", 6);
 }   
 
 function testShuffleDeck(assert) {
@@ -351,7 +391,7 @@ function testExecuteCardEffect(assert) {
     };
     executeCardEffect("some_script", mockCtrl, card, undefined);
     // assert, mockCtrl, sid, offset
-//    validateScriptWasCalled(assert, mockCtrl, "expected script name", 0);
+//    validate_script_was_called(assert, mockCtrl, "expected script name", 0);
     var sid = mockCtrl.scripts_called[0][0]
     var args = mockCtrl.scripts_called[0][1]
     assert.equal(sid, "expected script name", "correct script called");
@@ -370,7 +410,8 @@ window.onload = function() {
 	QUnit.test( "Play Card", testPlayCards);
     QUnit.test( "Shuffle Deck", testShuffleDeck);
     QUnit.test( "Discard Card", testDiscardCard);
-	QUnit.test( "Test Validate Script Function", testValidateScriptWasCalled); //*/
+	QUnit.test( "Test Validate Script Function", testvalidate_script_was_called); //*/
 	QUnit.test( "Test Take Turn (one action)", testTakeTurnWithOneAction);
 //    QUnit.test( "Test Draw Card", testDrawCard);
+    QUnit.test( "Take Turn with A Status Effects", testTakeTurnWithStatusEffect);
 }
