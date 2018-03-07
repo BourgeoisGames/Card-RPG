@@ -80,6 +80,23 @@ function start_new_round(controller, encounter) {
 		draw_cards(controller, combatant, card_draw);
 		// reset initiative
 		combatant.initiatve = combatant.base_initiative;
+		decriment_status_effects(combatant);
+		
+		resolve_statuses("status_onStartRound", controller, combatant);
+		execute_card_effect("onStartRound", controller, combatant.active_card, {});
+	}
+}
+
+function decriment_status_effects(character) {
+	if (typeof(character.status_effects) === "undefined") { continue; }
+	for (var j = 0; j < character.status_effects.length; j++) {
+		var effect = character.status_effects[j];
+		if (effect.duration > 0) {
+			effect.duration -= 1;
+		}
+		if (effect.duration === 0) {
+			character.status_effects.splice(j, 1);
+		}
 	}
 }
 

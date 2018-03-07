@@ -82,9 +82,12 @@ var character2 = {
 }
 
 var sampleEncounterTemplate = {} // TODO
-var sampleEncounter = {
-    "combatants": [character1, character2],
-    "history": []
+var SampleEncounter = function(combatants) {
+    this.combatants = [];
+	for (var i = 0; i < combatants.length; i++) {
+		this.combatants.push(combatants[i]);
+	}
+    this.history = [];
 }
 
 var sampleCombatEncounter = {} // TODO
@@ -126,7 +129,7 @@ function testTakeTurnWithStatusEffect(assert) {
     var defender = $.extend(true, {}, character1);
     defender.status_effects = [ $.extend(true, {}, sample_status_effect) ];
     var action = {"type": "card", "value": 0, "actor": attacker, "target": defender};
-    var encounter = $.extend(true, {}, sampleEncounter)
+    var encounter = new SampleEncounter([attacker, defender])
     var mockCtrl = new MockController();
     
     // get expected results
@@ -162,7 +165,7 @@ function testTakeTurnWithOneAction(assert) {
     var attacker = $.extend(true, {}, character1);
     var defender = $.extend(true, {}, character1);
     var action = {"type": "card", "value": 0, "actor": attacker, "target": defender};
-    var encounter = $.extend(true, {}, sampleEncounter)
+    var encounter = new SampleEncounter([attacker, defender])
     var mockCtrl = new MockController();
     
     // get expected results
@@ -175,7 +178,7 @@ function testTakeTurnWithOneAction(assert) {
     var bool = attacker.initiative === character1.initiative - sampleCard1.card_cost;
     assert.ok(bool, "Attacker's initiative is decreased");
     
-    bool = encounter.history.length === sampleEncounter.history.length + 1;
+    bool = encounter.history.length === new SampleEncounter().history.length + 1;
     assert.ok(bool, "Encounter History Length Increases");
     
     assert.equal(attacker.discard.length, discard_len + 1, "card played increases discard");
@@ -204,6 +207,61 @@ function testTakeTurnWithOneAction(assert) {
 function testCardTypes(assert) {
     assert.ok(isCard(sampleCard1), "test isCard detects card");
     assert.ok(!isCard({}), "test isCard rejects empty object");
+}
+
+function testStatusEffectDuration( assert ) {
+	testEndTurnDecrimentsStatusDuration(assert);
+	testEndTurnDoesntDectimentNegativeDuration(assert);
+	testEndTurnRemovesWhenDurationZero(assert);
+}
+
+function testEndTurnDecrimentsStatusDuration(assert) {
+    var attacker = $.extend(true, {}, character1);
+    var status_effect = $.extend(true, {}, sample_status_effect);
+	attacker.status_effects = [status_effect]
+    var encounter = new SampleEncounter([attacker]);
+    var mockCtrl = new MockController();
+	
+	var status_effect.duration = 3;
+	var start_duration = status_effect.duration;
+	var start_length = attaker.status_effects.length;
+	
+	start_new_round(controller, encounter);
+	assert.equal(start_duration - 1, status_effect.duration);
+	assert.equal(start_length - 1, attaker.status_effects.length);
+}
+
+function testEndTurnDoesntDectimentNegativeDuration(assert) {
+    var attacker = $.extend(true, {}, character1);
+    var status_effect = $.extend(true, {}, sample_status_effect);
+	attacker.status_effects = [status_effect]
+    var encounter = new SampleEncounter([attacker]);
+    var mockCtrl = new MockController();
+	
+	var status_effect.duration = -1;
+	var start_duration = status_effect.duration;
+	var start_length = attaker.status_effects.length;
+	
+	start_new_round(controller, encounter);
+	assert.equal(start_duration - 1, status_effect.duration);
+	assert.equal(start_length - 1, attaker.status_effects.length);
+}
+
+function testEndTurnRemovesWhenDurationZero(assert) {
+    var attacker = $.extend(true, {}, character1);
+    var status_effect = $.extend(true, {}, sample_status_effect);
+	attacker.status_effects = [status_effect]
+    var encounter = new SampleEncounter([attacker]);
+    var mockCtrl = new MockController();
+		
+	var status_effect.duration = 1;
+	var start_duration = status_effect.duration;
+	var start_length = attaker.status_effects.length;
+	start_new_round(controller, encounter);
+	assert.equal(start_duration - 1, status_effect.duration);
+	assert.equal(start_length - 1, attaker.status_effects.length);
+	
+	
 }
 
 function testCombatTypes(assert) {
@@ -237,15 +295,11 @@ function testCombatTypes(assert) {
     assert.ok(!isCombatant({}))
 }
 
-function testUndefinedCardArgs() {
-    
-}
-
 function testPlayCards(assert) {
     // setup test data 
     var attacker = $.extend(true, {}, character1);
     var action = {"type": "card", "value": 0, "actor": attacker};
-    var encounter = $.extend(true, {}, sampleEncounter)
+    var encounter = new SampleEncounter([attacker])
     var mockCtrl = new MockController();
     
     // get expected results
@@ -258,7 +312,7 @@ function testPlayCards(assert) {
     var bool = attacker.initiative === character1.initiative - sampleCard1.card_cost;
     assert.ok(bool, "Attacker's initiative is decreased");
     
-    bool = encounter.history.length === sampleEncounter.history.length + 1;
+    bool = encounter.history.length === new SampleEncounter().history.length + 1;
     assert.ok(bool, "Encounter History Length Increases");
     
     assert.equal(attacker.discard.length, discard_len + 1, "card played increases discard");
@@ -294,7 +348,7 @@ function testDrawCard(assert) {
 function testResolveActionAgainstNull(assert) {
     var action = new CombatAction(sampleCard1);
     var attacker = $.extend(true, {}, character1);
-    var encounter = $.extend(true, {}, sampleEncounter);
+    var encounter = new SampleEncounter([attacker]);
     var mockCtrl = new MockController();
     take_action(mockCtrl, attacker, encounter, action); 
     
@@ -316,7 +370,7 @@ function testResolveActionAgainstNull(assert) {
 function testResolveActionAgainstCard(assert) {
     var action = new CombatAction(sampleCard1);
     var attacker = $.extend(true, {}, character1);
-    var encounter = $.extend(true, {}, sampleEncounter);
+    var encounter = new SampleEncounter([attacker]);
     var mockCtrl = new MockController();
     
     take_action(mockCtrl, attacker, encounter, action); 

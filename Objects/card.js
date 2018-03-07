@@ -37,6 +37,7 @@ function isCard(obj) {
  * onDiscarded              - resolves as soon as the card is added to the discard
  * onRemovedFromHand        - resolves as soon as the card is removed from the hand.
  * onDrawn                  - resolves as soon as the card is drawn from the deck
+ * onStartRound
  * &&& onOpponentDraws          - resolves as soon as the card is drawn from the deck
  */
  // &&& field not yet implemented in the pipeline
@@ -64,5 +65,6 @@ function isCard(obj) {
  * status_onRemovedFromHand        - resolves as soon as the card is removed from the hand.
  * status_onDrawCard               - resolves as soon as the card is drawn from the deck
  * status_onOpponentDraws          - resolves as soon as the card is drawn from the deck
+ * status_onStartRound
  */
  // &&& field not yet implemented in the pipeline
