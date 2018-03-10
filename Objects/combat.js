@@ -73,6 +73,9 @@ function start_new_round_script(controller, data) {
 	start_new_round(controller, encounter);
 }
 function start_new_round(controller, encounter) {
+	console.log("encounter.combatants");
+	console.log(encounter.combatants);
+	
 	for (var i = 0; i < encounter.combatants.length; i++) {
 		var combatant = encounter.combatants[i];
 		// Draw up to hand size
@@ -88,7 +91,8 @@ function start_new_round(controller, encounter) {
 }
 
 function decriment_status_effects(character) {
-	if (typeof(character.status_effects) === "undefined") { continue; }
+	console.log("character.status_effects:\n" + character.status_effects);
+	if (typeof(character.status_effects) === "undefined") { return; }
 	for (var j = 0; j < character.status_effects.length; j++) {
 		var effect = character.status_effects[j];
 		if (effect.duration > 0) {
@@ -145,7 +149,7 @@ function get_card_effect_args(effect_id, card) {
 }
 
 function execute_card_effect(effect_id, controller, card, hook_args) {
-    console.log("execute_card_effect - card:");
+    console.log("execute_card_effect('" + effect_id + "') - card:");
     console.log(card);
     if (typeof(card) === "undefined") { return; }
     if (typeof(card.card_effects) === "undefined") { return; }
@@ -187,6 +191,7 @@ function execute_one_status(hook_id, controller, effect, character) {
 }
 
 function resolve_statuses(hook_id, controller, character) {
+	console.log("resolve statuses('"  + hook_id + "');");
 	if (typeof(character.status_effects) === "undefined") {
 		console.log("character " + character.name + " has no status effects");
 		return;
@@ -228,8 +233,11 @@ function draw_one_card(controller, character) {
     var new_card = controller.get_by_type_and_id("card", card_id);
     character.hand.push(new_card);
 	var hook_args = {"actor": character}
-    resolve_statuses("status_onDrawCard", controller, attacker);
+	console.log("1");
+    resolve_statuses("status_onDrawCard", controller, character);
+	console.log("2");
     execute_card_effect("onDrawn", controller, new_card, hook_args);
+	console.log("3");
 }
 
 function shuffle_deck(controller, character) {

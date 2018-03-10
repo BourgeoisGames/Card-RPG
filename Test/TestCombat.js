@@ -81,11 +81,10 @@ var character2 = {
     "active_card": null
 }
 
-var sampleEncounterTemplate = {} // TODO
-var SampleEncounter = function(combatants) {
+var SampleEncounter = function(start_combatants) {
     this.combatants = [];
-	for (var i = 0; i < combatants.length; i++) {
-		this.combatants.push(combatants[i]);
+	for (var i = 0; i < start_combatants.length; i++) {
+		this.combatants.push(start_combatants[i]);
 	}
     this.history = [];
 }
@@ -164,6 +163,8 @@ function testTakeTurnWithStatusEffect(assert) {
 function testTakeTurnWithOneAction(assert) {
     var attacker = $.extend(true, {}, character1);
     var defender = $.extend(true, {}, character1);
+	var starting_attacker_hp = attacker.hp;
+	var starting_defender_hp = defender.hp;
     var action = {"type": "card", "value": 0, "actor": attacker, "target": defender};
     var encounter = new SampleEncounter([attacker, defender])
     var mockCtrl = new MockController();
@@ -178,17 +179,17 @@ function testTakeTurnWithOneAction(assert) {
     var bool = attacker.initiative === character1.initiative - sampleCard1.card_cost;
     assert.ok(bool, "Attacker's initiative is decreased");
     
-    bool = encounter.history.length === new SampleEncounter().history.length + 1;
+    bool = encounter.history.length === new SampleEncounter([]).history.length + 1;
     assert.ok(bool, "Encounter History Length Increases");
     
     assert.equal(attacker.discard.length, discard_len + 1, "card played increases discard");
     assert.equal(attacker.hand.length, hand_len - 1, "card played removed from hand");
     
     assert.equal(starting_active_card.card_id, attacker.discard.pop(), "discard has previous active card on top");
-    
-    var bool = defender.hp === character1.hp - attacker.active_card.attack;
-    assert.ok(bool, "hp is decreased");
-    
+    var damage = Math.max(0, attacker.active_card.card_attack - defender.active_card.card_defense);
+    assert.equal(defender.hp, starting_defender_hp - damage, "defender hp is decreased");
+    assert.equal(attacker.hp, starting_attacker_hp, "attacker hp NOT decreased");
+    console.log(" - " + attacker.active_card.card_attack);
     console.log(mockCtrl.scripts_called);
     // hooks from play card
     validate_script_was_called(assert, mockCtrl, "onPlayCard", 0);
@@ -213,6 +214,7 @@ function testStatusEffectDuration( assert ) {
 	testEndTurnDecrimentsStatusDuration(assert);
 	testEndTurnDoesntDectimentNegativeDuration(assert);
 	testEndTurnRemovesWhenDurationZero(assert);
+	testEndTurnWhenDurationAlreadyZero(assert);
 }
 
 function testEndTurnDecrimentsStatusDuration(assert) {
@@ -222,13 +224,13 @@ function testEndTurnDecrimentsStatusDuration(assert) {
     var encounter = new SampleEncounter([attacker]);
     var mockCtrl = new MockController();
 	
-	var status_effect.duration = 3;
+	status_effect.duration = 3;
 	var start_duration = status_effect.duration;
-	var start_length = attaker.status_effects.length;
+	var start_length = attacker.status_effects.length;
 	
-	start_new_round(controller, encounter);
-	assert.equal(start_duration - 1, status_effect.duration);
-	assert.equal(start_length - 1, attaker.status_effects.length);
+	start_new_round(mockCtrl, encounter);
+	assert.equal(start_duration - 1, status_effect.duration, "test status effect duration decreases");
+	assert.equal(start_length, attacker.status_effects.length, "test nonzero duration status NOT removed");
 }
 
 function testEndTurnDoesntDectimentNegativeDuration(assert) {
@@ -238,13 +240,13 @@ function testEndTurnDoesntDectimentNegativeDuration(assert) {
     var encounter = new SampleEncounter([attacker]);
     var mockCtrl = new MockController();
 	
-	var status_effect.duration = -1;
+	status_effect.duration = -1;
 	var start_duration = status_effect.duration;
-	var start_length = attaker.status_effects.length;
+	var start_length = attacker.status_effects.length;
 	
-	start_new_round(controller, encounter);
-	assert.equal(start_duration - 1, status_effect.duration);
-	assert.equal(start_length - 1, attaker.status_effects.length);
+	start_new_round(mockCtrl, encounter);
+	assert.equal(start_duration, status_effect.duration, "test status effect negative duration unchanged");
+	assert.equal(start_length, attacker.status_effects.length, "test nonzero duration status NOT removed");
 }
 
 function testEndTurnRemovesWhenDurationZero(assert) {
@@ -254,14 +256,27 @@ function testEndTurnRemovesWhenDurationZero(assert) {
     var encounter = new SampleEncounter([attacker]);
     var mockCtrl = new MockController();
 		
-	var status_effect.duration = 1;
+	status_effect.duration = 1;
 	var start_duration = status_effect.duration;
-	var start_length = attaker.status_effects.length;
-	start_new_round(controller, encounter);
-	assert.equal(start_duration - 1, status_effect.duration);
-	assert.equal(start_length - 1, attaker.status_effects.length);
-	
-	
+	var start_length = attacker.status_effects.length;
+	start_new_round(mockCtrl, encounter);
+	assert.equal(start_duration - 1, status_effect.duration, "test status effect duration decreases");
+	assert.equal(start_length - 1, attacker.status_effects.length, "test zero duration status removed");
+}
+
+function testEndTurnWhenDurationAlreadyZero(assert) {
+    var attacker = $.extend(true, {}, character1);
+    var status_effect = $.extend(true, {}, sample_status_effect);
+	attacker.status_effects = [status_effect]
+    var encounter = new SampleEncounter([attacker]);
+    var mockCtrl = new MockController();
+		
+	status_effect.duration = 0;
+	var start_duration = status_effect.duration;
+	var start_length = attacker.status_effects.length;
+	start_new_round(mockCtrl, encounter);
+	assert.equal(start_duration, status_effect.duration, "test status effect zero duration unchanged");
+	assert.equal(start_length - 1, attacker.status_effects.length, "test zero duration status removed");
 }
 
 function testCombatTypes(assert) {
@@ -312,7 +327,7 @@ function testPlayCards(assert) {
     var bool = attacker.initiative === character1.initiative - sampleCard1.card_cost;
     assert.ok(bool, "Attacker's initiative is decreased");
     
-    bool = encounter.history.length === new SampleEncounter().history.length + 1;
+    bool = encounter.history.length === new SampleEncounter([]).history.length + 1;
     assert.ok(bool, "Encounter History Length Increases");
     
     assert.equal(attacker.discard.length, discard_len + 1, "card played increases discard");
@@ -328,7 +343,8 @@ function testPlayCards(assert) {
 }
 
 function testDrawCard(assert) {
-    var character = {"deck": ["sampleCard"], "hand": []}
+    var character = $.extend(true, {}, character1);
+	character.status_effects = $.extend(true, {}, sample_status_effect);
     var start_hand = character.hand.length;
     var start_deck = character.deck.length;
     var card_id = character.deck[character.deck.length-1]
@@ -341,8 +357,9 @@ function testDrawCard(assert) {
     // this test is bad because it tests the card returned by a mock function.
     // assert.equal(card_id, character.hand[i].card_id, "top card drawn");
     
-    validate_script_was_called(assert, mockCtrl, "onDrawn", 0);
-    validate_script_was_called(assert, mockCtrl, "onOpponentDraws", 1);
+    validate_script_was_called(assert, mockCtrl, "status_onDrawCard", 0);
+    validate_script_was_called(assert, mockCtrl, "onDrawn", 1);
+//    validate_script_was_called(assert, mockCtrl, "onOpponentDraws", 1);
 }
 
 function testResolveActionAgainstNull(assert) {
@@ -357,7 +374,7 @@ function testResolveActionAgainstNull(assert) {
     var action = {"type": "card", "actor": attacker, "target": defender, "value": 0}
     resolve_card(mockCtrl, encounter, action);
     
-    var bool = defender.hp === character2.hp - attacker.active_card.attack;
+    var bool = defender.hp === character2.hp - attacker.active_card.card_attack;
     assert.ok(bool, "hp is decreased");
     
     validate_script_was_called(assert, mockCtrl, "onCardResolved", 0);
@@ -380,7 +397,7 @@ function testResolveActionAgainstCard(assert) {
     var action = {"type": "card", "value": 0, "actor": attacker, "target": defender};
     resolve_card(mockCtrl, encounter, action);
     
-    var bool = defender.hp === character2.hp - attacker.active_card.attack;
+    var bool = defender.hp === character2.hp - attacker.active_card.card_attack;
     assert.ok(bool, "hp is decreased");
     
     validate_script_was_called(assert, mockCtrl, "onCardResolved", 0);
@@ -397,7 +414,7 @@ function testShuffleDeck(assert) {
     var unshuffled = [1, 2, 3, 4, 5, 6, 7, 8, 9];
     var mockCtrl = new MockController();
     
-    shuffleDeck(mockCtrl, mockCharacter);
+    shuffle_deck(mockCtrl, mockCharacter);
     var bool = false;
     for (var i = 0; i < unshuffled.length; i++) {
         bool = bool || (unshuffled[i] != mockCharacter.deck[i]);
@@ -420,7 +437,7 @@ function testDiscardCard(assert) {
     console.log("hand_len: " + hand_len);
     
     var test_card_id = 2;
-    removeCardFromHand(mockCtrl, mockCharacter, test_card_id);
+    remove_card_from_hand (mockCtrl, mockCharacter, test_card_id);
     console.log(mockCharacter.hand);
     console.log(mockCharacter.discard);
     
@@ -440,7 +457,7 @@ function testExecuteCardEffect(assert) {
         "card_effects": {"some_script": "expected script name"},
         "effect_args": {"some_script": [1, 2, 3]}
     };
-    executeCardEffect("some_script", mockCtrl, card, undefined);
+    execute_card_effect("some_script", mockCtrl, card, undefined);
     // assert, mockCtrl, sid, offset
 //    validate_script_was_called(assert, mockCtrl, "expected script name", 0);
     var sid = mockCtrl.scripts_called[0][0]
@@ -456,13 +473,14 @@ window.onload = function() {
     console.log("testing combat");
 /*
 	QUnit.test( "Card Types", testCardTypes);
-	QUnit.test( "Combat Types", testCombatTypes);
-    QUnit.test("Test Execute Card Effect", testExecuteCardEffect);
+	QUnit.test( "Combat Types", testCombatTypes); //*/
+/*    QUnit.test("Test Execute Card Effect", testExecuteCardEffect);
 	QUnit.test( "Play Card", testPlayCards);
     QUnit.test( "Shuffle Deck", testShuffleDeck);
     QUnit.test( "Discard Card", testDiscardCard);
-	QUnit.test( "Test Validate Script Function", testvalidate_script_was_called); //*/
-	QUnit.test( "Test Take Turn (one action)", testTakeTurnWithOneAction);
-//    QUnit.test( "Test Draw Card", testDrawCard);
-    QUnit.test( "Take Turn with A Status Effects", testTakeTurnWithStatusEffect);
+	QUnit.test( "Test Validate Script Function", testvalidate_script_was_called); //* /
+	QUnit.test( "Test Take Turn (one action)", testTakeTurnWithOneAction); //*/
+    QUnit.test( "Test Draw Card", testDrawCard);
+//    QUnit.test( "Take Turn with A Status Effects", testTakeTurnWithStatusEffect);
+//    QUnit.test( "Status effect duration", testStatusEffectDuration);
 }
