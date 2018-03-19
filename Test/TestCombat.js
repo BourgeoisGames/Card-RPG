@@ -461,11 +461,16 @@ function testExecuteCardEffect(assert) {
     // assert, mockCtrl, sid, offset
 //    validate_script_was_called(assert, mockCtrl, "expected script name", 0);
     var sid = mockCtrl.scripts_called[0][0]
-    var args = mockCtrl.scripts_called[0][1]
+    var args_called = mockCtrl.scripts_called[0][1]
+	console.log("scripts called");
+	console.log(mockCtrl.scripts_called);
     assert.equal(sid, "expected script name", "correct script called");
     var expected_args = card.effect_args.some_script;
     for (var i = 0; i < expected_args.length; i++) {
-        assert.equal(args.card_args[i], expected_args[i], "arg " + i + " matches expected");
+		console.log(expected_args[i]);
+		console.log("args_called:");
+		console.log(args_called);
+        assert.equal(args_called.card_args[i], expected_args[i], "arg " + i + " matches expected");
     }
 }
 
@@ -474,13 +479,13 @@ window.onload = function() {
 /*
 	QUnit.test( "Card Types", testCardTypes);
 	QUnit.test( "Combat Types", testCombatTypes); //*/
-/*    QUnit.test("Test Execute Card Effect", testExecuteCardEffect);
-	QUnit.test( "Play Card", testPlayCards);
+    QUnit.test("Test Execute Card Effect", testExecuteCardEffect);
+/*	QUnit.test( "Play Card", testPlayCards);
     QUnit.test( "Shuffle Deck", testShuffleDeck);
     QUnit.test( "Discard Card", testDiscardCard);
 	QUnit.test( "Test Validate Script Function", testvalidate_script_was_called); //* /
 	QUnit.test( "Test Take Turn (one action)", testTakeTurnWithOneAction); //*/
-    QUnit.test( "Test Draw Card", testDrawCard);
-//    QUnit.test( "Take Turn with A Status Effects", testTakeTurnWithStatusEffect);
-//    QUnit.test( "Status effect duration", testStatusEffectDuration);
+/*/    QUnit.test( "Test Draw Card", testDrawCard);
+    QUnit.test( "Take Turn with A Status Effects", testTakeTurnWithStatusEffect);
+    QUnit.test( "Status effect duration", testStatusEffectDuration); //*/
 }
