@@ -45,7 +45,8 @@ var sample_status_effect = {
 
 
 var sampleCard1 = {
-    "card_id": "card one", 
+    "card_id": "card_one", 
+	"name": "Card One",
     "description": "description one",
     "card_effects": sample_card_effects,
     "card_attack": 2,
@@ -54,7 +55,8 @@ var sampleCard1 = {
 }
 
 var sampleCard2 = {
-    "card_id": "card two", 
+    "card_id": "card_two", 
+    "name": "Card Two", 
     "description": "description two",
 //    "card_effects": ,
     "card_attack": 3,
