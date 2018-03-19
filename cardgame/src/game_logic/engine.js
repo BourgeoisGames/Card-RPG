@@ -120,7 +120,14 @@ game_controller.validate_game_data = function(){
 
 game_controller.get_by_type_and_id = function(type,tid){
   var that = this;
-  return that.data_model[type][tid];
+  var cop = copy(that.data_model.data[type][tid]);
+  cop.id = tid;
+  return cop;
+};
+
+game_controller.get_by_type_and_ids = function(type,tids){
+  var that = this;
+  return tids.map(x => that.get_by_type_and_id(type,x));
 };
 
 game_controller.get_script = function(sid){
@@ -146,7 +153,7 @@ game_controller.handle_error = function(err){
   console.log(err);
 };
 
-game_controller.run_script = function(ref, args){//takes a script reference and list of arguments
+game_controller.run_script = function(ref){//takes a script reference and list of arguments
   var that = this;
   if (that.interrupted) {return 1;}
   var full_args = copy(ref.args)
@@ -236,6 +243,14 @@ game_controller.trigger = function(signal_id,args){
 
   that.interrupted = false;
 };
+
+game_controller.add_scripts = function(obj){
+  var that = this;
+  Object.keys(obj).forEach(script_id => {
+    var script = obj[script_id];
+    that.add_script({"id":script_id,"script":script});
+  });
+}
 
 export default game_controller;
 
