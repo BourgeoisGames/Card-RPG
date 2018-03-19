@@ -1,22 +1,68 @@
 
 function isCard(obj) {
     var bool;
-    bool = "string" === typeof(obj.name);
+    bool = "string" === typeof(obj.card_id);
     bool &= "string" === typeof(obj.description);
     bool &= "number" === typeof(obj.card_attack);
     bool &= "number" === typeof(obj.card_defense);
     bool &= "number" === typeof(obj.card_cost);
-    bool &= Array.isArray(obj.card_effects);
-    if (!bool) return false;
-    for (var i = 0; i < obj.card_effects.length; i++) {
-        // every item in obj.card_effects must be a cardEffect
-        if (! isCardEffect(obj.card_effects[i])) return false;
-    }
+    bool &= ("undefined" === typeof(obj.effect_args)
+         || "object" === typeof(obj.effect_args))
+    // card effects is an object, each field contains a function which returns a game_script execution.
+    bool &= "object" === typeof(obj.card_effects);
+    bool &= "object" === typeof(obj.modifiers)
+         || "undefined" === typeof(obj.modifiers);
+    bool &= "undefined" === typeof(obj.card_holder)
+         || isCharacter(obj.card_holder);
     return bool;
 }
 
-function isCardEffect(obj) {
-    // TODO i defined this to return true so I can use cards before I 
-    // create what a card effect is
-    return true;  
-}
+/* Card Effect Types
+ * 
+ * onPlayCard               - resolves as soon as the card is played
+ * &&& onCardPlayedAgainst      - resolves as soon as the card is played
+ * onCardResolved           - resolves while the card is resolving
+ * onCardResolvedAgainst    - resolves while the card is resolving
+ * onRemovedFromActive      - resolves when the card is replaced by another card as
+ *                             your active card
+ * onAttacked               - resolves when an attack is made, while this card is 
+ *                             active
+ * onDealsDamage            - resolves when this card is resolved, and successfully 
+ *                             deals damage
+ * onDamaged                - resolves when another card resolves, while this card is 
+ *                             active, which deals damage.
+ * onBlocksAttack           - resolves when an attack, with at least 1 attack is made,
+ *                             that deals no damage
+ * onAttackBlocked              - resolves when card is played, but fails to deal damage
+ * onDiscarded              - resolves as soon as the card is added to the discard
+ * onRemovedFromHand        - resolves as soon as the card is removed from the hand.
+ * onDrawn                  - resolves as soon as the card is drawn from the deck
+ * &&& onOpponentDraws          - resolves as soon as the card is drawn from the deck
+ */
+ // &&& field not yet implemented in the pipeline
+ 
+ 
+
+/* Status Effect Hooks
+ * onCardPlayedAgainst             - resolves as soon as a card is played against the character
+ * status_onPlayCard               - resolves as soon as the card is played
+ * status_onCardPlayedAgainst      - resolves as soon as the card is played
+ * status_onCardResolved           - resolves while the card is resolving
+ * status_onCardResolvedAgainst    - resolves while the card is resolving
+ * status_onRemovedFromActive      - resolves when the card is replaced by another card as
+ *                             your active card
+ * status_onAttacked               - resolves when an attack is made, while this card is 
+ *                             active
+ * status_onDealsDamage            - resolves when this card is resolved, and successfully 
+ *                             deals damage
+ * status_onDamaged                - resolves when another card resolves, while this card is 
+ *                             active, which deals damage.
+ * status_onBlocksAttack           - resolves when an attack, with at least 1 attack is made,
+ *                             that deals no damage
+ * status_onAttackBlocked          - resolves when card is played, but fails to deal damage
+ * status_onDiscarded              - resolves as soon as the card is added to the discard
+ * status_onRemovedFromHand        - resolves as soon as the card is removed from the hand.
+ * status_onDrawCard               - resolves as soon as the card is drawn from the deck
+ * status_onOpponentDraws          - resolves as soon as the card is drawn from the deck
+ */
+ // &&& field not yet implemented in the pipeline

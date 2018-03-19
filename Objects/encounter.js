@@ -5,6 +5,10 @@ function isEncounterTemplate(obj) {
     return bool;
 }
 
+function getEncounter(game_state) {
+    return controller.state.data.encounter;
+}
+
 function isEncounter(obj) {
     var bool = true;
     
@@ -38,6 +42,7 @@ function isCombatant(obj) {
     return bool;
 } 
 
-function CombatAction(value) {
-    this.value = value
+function CombatAction(type, value) {
+    this.type = type;
+    this.value = value;
 }
