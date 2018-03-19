@@ -56,7 +56,7 @@ var sampleCard1 = {
 
 var sampleCard2 = {
     "card_id": "card_two", 
-    "name": "Card Two", 
+    "name": "Card Two",
     "description": "description two",
 //    "card_effects": ,
     "card_attack": 3,
