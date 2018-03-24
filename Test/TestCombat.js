@@ -48,20 +48,20 @@ var sampleCard1 = {
     "card_id": "card_one", 
 	"name": "Card One",
     "description": "description one",
-    "card_effects": sample_card_effects,
-    "card_attack": 2,
-    "card_defense": 1,
-    "card_cost": 1
+    "effects": sample_card_effects,
+    "attack": 2,
+    "defense": 1,
+    "cost": 1
 }
 
 var sampleCard2 = {
     "card_id": "card_two", 
     "name": "Card Two",
     "description": "description two",
-//    "card_effects": ,
-    "card_attack": 3,
-    "card_defense": 2,
-    "card_cost": 2
+//    "effects": ,
+    "attack": 3,
+    "defense": 2,
+    "cost": 2
 }
 
 var character1 = {
@@ -178,7 +178,7 @@ function testTakeTurnWithOneAction(assert) {
     
     take_turn(mockCtrl, encounter, [action]);
     
-    var bool = attacker.initiative === character1.initiative - sampleCard1.card_cost;
+    var bool = attacker.initiative === character1.initiative - sampleCard1.cost;
     assert.ok(bool, "Attacker's initiative is decreased");
     
     bool = encounter.history.length === new SampleEncounter([]).history.length + 1;
@@ -188,10 +188,10 @@ function testTakeTurnWithOneAction(assert) {
     assert.equal(attacker.hand.length, hand_len - 1, "card played removed from hand");
     
     assert.equal(starting_active_card.card_id, attacker.discard.pop(), "discard has previous active card on top");
-    var damage = Math.max(0, attacker.active_card.card_attack - defender.active_card.card_defense);
+    var damage = Math.max(0, attacker.active_card.attack - defender.active_card.defense);
     assert.equal(defender.hp, starting_defender_hp - damage, "defender hp is decreased");
     assert.equal(attacker.hp, starting_attacker_hp, "attacker hp NOT decreased");
-    console.log(" - " + attacker.active_card.card_attack);
+    console.log(" - " + attacker.active_card.attack);
     console.log(mockCtrl.scripts_called);
     // hooks from play card
     validate_script_was_called(assert, mockCtrl, "onPlayCard", 0);
@@ -326,7 +326,7 @@ function testPlayCards(assert) {
     
     take_action(mockCtrl, encounter, action); 
     
-    var bool = attacker.initiative === character1.initiative - sampleCard1.card_cost;
+    var bool = attacker.initiative === character1.initiative - sampleCard1.cost;
     assert.ok(bool, "Attacker's initiative is decreased");
     
     bool = encounter.history.length === new SampleEncounter([]).history.length + 1;
@@ -376,7 +376,7 @@ function testResolveActionAgainstNull(assert) {
     var action = {"type": "card", "actor": attacker, "target": defender, "value": 0}
     resolve_card(mockCtrl, encounter, action);
     
-    var bool = defender.hp === character2.hp - attacker.active_card.card_attack;
+    var bool = defender.hp === character2.hp - attacker.active_card.attack;
     assert.ok(bool, "hp is decreased");
     
     validate_script_was_called(assert, mockCtrl, "onCardResolved", 0);
@@ -399,7 +399,7 @@ function testResolveActionAgainstCard(assert) {
     var action = {"type": "card", "value": 0, "actor": attacker, "target": defender};
     resolve_card(mockCtrl, encounter, action);
     
-    var bool = defender.hp === character2.hp - attacker.active_card.card_attack;
+    var bool = defender.hp === character2.hp - attacker.active_card.attack;
     assert.ok(bool, "hp is decreased");
     
     validate_script_was_called(assert, mockCtrl, "onCardResolved", 0);
@@ -456,7 +456,7 @@ function testDiscardCard(assert) {
 function testExecuteCardEffect(assert) {
     var mockCtrl = new MockController();
     var card = {
-        "card_effects": {"some_script": "expected script name"},
+        "effects": {"some_script": "expected script name"},
         "effect_args": {"some_script": [1, 2, 3]}
     };
     execute_card_effect("some_script", mockCtrl, card, undefined);

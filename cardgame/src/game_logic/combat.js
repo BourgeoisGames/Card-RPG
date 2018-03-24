@@ -6,8 +6,8 @@
  * }
  */
 function take_turn_script(controller, data) {
-    var encounter = getEncounter(controller.state);
-    var action_list = data.call_data.action_list;
+    var encounter = get_encounter_from_game_state(controller.state);
+    var action_list = data.action_list;
     take_turn(controller, encounter, action_list);
 }
 
@@ -24,8 +24,10 @@ function take_turn(controller, encounter, action_list) {
     }
 }
 
+function prepare_for_action()
+
 function start_combat_script(controller, data) {
-    var enemy_ids = data.call_data.enemy_ids;
+    var enemy_ids = data.enemy_ids;
     start_combat(controller, enemy_ids);
 }
 
@@ -35,8 +37,10 @@ function start_combat(controller, enemy_ids) {
         "combatants": [controller.state.data.player],
         "history": []
     }
+	controller.state.data.player.id = 0;
     for (var i = 0; i < ids.length; i++) {
         var new_character = controller.get_by_type_and_id("character", ids[i]);
+		new_character.id = i+1;
         encounter.combatants.push(new_character);
     } 
     controller.state.data.encounter = encounter;
@@ -49,8 +53,8 @@ function end_combat(controller) {
 // data = {"call_data": {"attacker": character, "action": action}}
 // action: {"actor": character, "target": character, "type": string, "value": object | int}
 function take_action_script(controller, data) {
-    var encounter = getEncounter(controller.state);
-    var action = data.call_data.action;
+    var encounter = get_encounter_from_game_state(controller.state);
+    var action = data.action;
     take_action(controller, encounter, action);
 }
 function take_action(controller, encounter, action) {
@@ -69,7 +73,7 @@ function take_action(controller, encounter, action) {
 }
 
 function start_new_round_script(controller, data) {
-    var encounter = getEncounter(controller.state);
+    var encounter = get_encounter_from_game_state(controller.state);
 	start_new_round(controller, encounter);
 }
 function start_new_round(controller, encounter) {
@@ -90,6 +94,72 @@ function start_new_round(controller, encounter) {
 	}
 }
 
+function start_new_turn_script(controller, data) {
+	var encouter = get_encounter_from_game_state(controller.state);
+	start_new_turn(controller, encounter);
+}
+
+function start_new_turn(controller, encounter) {
+	encounter.readied_actions = []
+	
+}
+
+function get_current_actors(encounter) {
+	
+}
+
+function can_character_act(character) {
+	if (character.initiative == 0) { return false; }
+	if (character.hand.length == 0) { return false; }
+	var min_cost = 
+	for (var i = 0; i < character.hand.length; i++) {
+		
+	}
+	
+}
+
+// get player input
+
+function get_actions_script(controller, data) {
+	get_action();
+}
+
+function get_action(controller, char_index) {
+	
+	controller.add_trigger({
+		"trigger_id": "get_action_" + char_index,
+		"signal_id": "get_action_signal_" + char_index,
+		"script_reference": {"id": "", "args": []}
+	});
+}
+
+function resolve_actions(controller, data) {
+	var encounter - get_encounter_from_game_state(controller.state);
+	
+	encounter.readied_actions[data.actor_id] = data.action;
+	controller.remove_trigger("get_action_" + data.actor_id);
+	
+	var actions_ready = are_all_actions_ready(encounter); 
+	if(! actions_ready) {
+		return;
+	}
+	
+	var action_list = []; // TODO
+	take_turn(controller, encounter, action_list);	
+}
+
+// takes an encounter, and returns a boolean if all the actors for the current turn have selected their actions.
+function are_all_actions_ready(encounter) {
+	for (var i = 0; i < encounter.readied_actions.length; i++) {
+		var action = encounter.readied_actions[i];
+		// if any action = undefined, return false.
+		if (! action) {
+			return false;
+		}
+	}
+	return true;
+}
+
 function decriment_status_effects(character) {
 	console.log("character.status_effects:\n" + character.status_effects);
 	if (typeof(character.status_effects) === "undefined") { return; }
@@ -105,7 +175,7 @@ function decriment_status_effects(character) {
 }
 
 function is_round_over_script(controller, data) {
-    var encounter = getEncounter(controller.state);
+    var encounter = get_encounter_from_game_state(controller.state);
 	return is_round_over(controller, encounter);
 }
 function is_round_over(controller, encounter) {
@@ -122,7 +192,7 @@ function character_can_act(character) {
 	}
 	var min_cost = Number.MAX_SAFE_INTEGER;
 	for (var i = 0; i < character.hand.length; i++) {
-		var cost = character.hand[i].card_cost;
+		var cost = character.hand[i].cost;
 		min_cost = min(min_cost, cost);
 	}
 	return character.initiative > cost;
@@ -152,8 +222,8 @@ function execute_card_effect(effect_id, controller, card, hook_args) {
     console.log("execute_card_effect('" + effect_id + "') - card:");
     console.log(card);
     if (typeof(card) === "undefined") { return; }
-    if (typeof(card.card_effects) === "undefined") { return; }
-	var script_ref = card.card_effects[effect_id];
+    if (typeof(card.effects) === "undefined") { return; }
+	var script_ref = card.effects[effect_id];
 	if (typeof(script_ref) === "undefined") { return; }
     //var cardArgs = get_card_effect_args(effect_id, card);
     var script_id = script_ref[0]
@@ -164,7 +234,7 @@ function execute_card_effect(effect_id, controller, card, hook_args) {
         "hook_args": hook_args,
         "card_args": card_args
     }; //*/
-    controller.execute_script(script_id, script_args);
+    controller.run_script({"id": script_id, "args": script_args});
 }
 
 // {
@@ -187,7 +257,7 @@ function execute_one_status(hook_id, controller, effect, character) {
 	var script_args = script_info[1];
 	// add 
 	script_args.character = character;
-	controller.execute_script(script_id, script_args)
+	controller.run_script({"id": script_id, "args": script_args})
 }
 
 function resolve_statuses(hook_id, controller, character) {
@@ -218,7 +288,7 @@ function play_card(controller, attacker, target, encounter, card_index) {
     execute_card_effect("onRemovedFromActive", controller, attacker.active_card, hook_args);
     attacker.previousCard = attacker.active_card;
     attacker.active_card = card;
-    attacker.initiative -= card.card_cost;
+    attacker.initiative -= card.cost;
     remove_card_from_hand(controller, attacker, card_index)
 }
 
@@ -231,6 +301,7 @@ function draw_cards(controller, character, numb_cards) {
 function draw_one_card(controller, character) {
     var card_id = character.deck.pop()
     var new_card = controller.get_by_type_and_id("card", card_id);
+	new_card.card_id = card_id;
     character.hand.push(new_card);
 	var hook_args = {"actor": character}
 	console.log("1");
@@ -273,9 +344,9 @@ function add_card_to_discard(controller, character, card_id) {
 }
     
 function resolve_card_script(controller, data) { 
-    var encounter = getEncounter(controller.state);
-    var attacker = encounter[data.call_data.attacker];
-    var defender = encounter[data.call_data.defender];
+    var encounter = get_encounter_from_game_state(controller.state);
+    var attacker = encounter[data.attacker];
+    var defender = encounter[data.defender];
     resolve_card(controller, encounter, attacker, defender);
 }
 function resolve_card(controller, encounter, action) {
@@ -284,9 +355,9 @@ function resolve_card(controller, encounter, action) {
     var attacker = action.actor;
     var defender = action.target;    
     if (isCard(defender.active_card)) {
-        defense_stat = defender.active_card.card_defense;
+        defense_stat = defender.active_card.defense;
     }
-    var damage = attacker.active_card.card_attack - defense_stat;
+    var damage = attacker.active_card.attack - defense_stat;
     if (damage < 0) {
         damage = 0;
     }
@@ -304,7 +375,7 @@ function resolve_card(controller, encounter, action) {
             execute_card_effect("onDealsDamage", controller, attacker.active_card, hook_args);
             resolve_statuses("status_onDamaged", controller, defender);
             execute_card_effect("onDamaged", controller, defender.active_card, hook_args);
-        } else if (attacker.active_card.card_attack != 0) {
+        } else if (attacker.active_card.attack != 0) {
             resolve_statuses("status_onAttackBlocked", controller, attacker);
             execute_card_effect("onAttackBlocked", controller, attacker.active_card, hook_args);
             resolve_statuses("status_onBlocksAttack", controller, defender);
@@ -314,16 +385,13 @@ function resolve_card(controller, encounter, action) {
         if (damage > 0) {
             resolve_statuses("status_onDealsDamage", controller, attacker);
             execute_card_effect("onDealsDamage", controller, attacker.active_card, hook_args);
-        } else if (attacker.active_card.card_attack != 0) {
+        } else if (attacker.active_card.attack != 0) {
             resolve_statuses("status_onAttackBlocked", controller, attacker);
             execute_card_effect("onAttackBlocked", controller, attacker.active_card, hook_args);
         }
     }
 }
 
-function is_character(obj) {
-	return false;
-}
 
 var gameScrips = [
     {"game_script_id": "take_action", "script": take_action_script},
@@ -336,9 +404,25 @@ var gameEvent = [
     {"event_id": "", "game_scripts": [], "data": {}}
 ];
 
-exports = gameScrips;
+var scripts = {
+	// 
+	"take_turn_script": take_turn_script,
+	
+	//
+	"start_combat_script": start_combat_script,
+	
+	//
+	"take_action_script": take_action_script,
+	
+	//
+	"start_new_round_script": start_new_round_script,
+	
+	// takes 0 args, and returns a bool of whether the round is over. 
+	"is_round_over_script": is_round_over_script,
+	
+	// takes data.attacker and *.*.defender, and resolves the 
+	// attacker's active card against the defenders active card
+	"resolve_card_script": resolve_card_script,
+};
 
-
-//exports function thingy(controller) {
-//    controller.addScript(foo);
-//}
+export default gc => gc.add_scripts(scripts);
