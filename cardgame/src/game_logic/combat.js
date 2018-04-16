@@ -7,12 +7,20 @@
  */
 function take_turn_script(controller, data) {
     var encounter = get_encounter_from_game_state(controller.state);
-    var action_list = data.action_list;
     take_turn(controller, encounter, action_list);
+}
+
+function get_encounter_from_game_state(game_state) {
+    return game_state.data.encounter;
+}
+
+function get_player_character_from_game_state(game_state) {
+    return game_state.data.player_character;
 }
 
 // assumes that 
 function take_turn(controller, encounter, action_list) {
+	var action_list = encounter.readied_actions;
     for (var i = 0; i < action_list.length; i++) {
         var action = action_list[i];
         take_action(controller, encounter, action);
@@ -22,28 +30,66 @@ function take_turn(controller, encounter, action_list) {
         var action = action_list[i];
         resolve_card(controller, encounter, action);
     }
+	start_new_turn(controller, encounter);
 }
 
-function prepare_for_action()
-
-function start_combat_script(controller, data) {
-    var enemy_ids = data.enemy_ids;
-    start_combat(controller, enemy_ids);
+function is_round_over(controller, encounter) {
+	for (var i = 0; i < encounter.characters.length; i++) {
+		if (character_can_act(encounter.characters[i])) {
+			return false;
+		}
+	}
+	return true;
 }
 
-function start_combat(controller, enemy_ids) {
-    var encounter = {
+function default_is_combat_over(controller, encounter) {
+	if (encoutner.characters[0].hp === 0) {
+		return true;
+	}
+	for (var i = 0; i < encounter.characters.length; i++) {
+		
+	}
+	
+	return false;
+}
+
+/*
+function instantiate_default_encounter() {
+	// DEPRICATED -- do not use
+	var encounter = {
         "type": "combat",
         "combatants": [controller.state.data.player],
+		"is_combat_over": default_is_combat_over,
         "history": []
     }
 	controller.state.data.player.id = 0;
-    for (var i = 0; i < ids.length; i++) {
-        var new_character = controller.get_by_type_and_id("character", ids[i]);
+    for (var i = 0; i < enemy_ids.length; i++) {
+        var new_character = controller.get_by_type_and_id("character", enemy_ids[i]);
+		// i+1 because player is at index 0 always
 		new_character.id = i+1;
         encounter.combatants.push(new_character);
     } 
-    controller.state.data.encounter = encounter;
+    controller.state.data.encounter = encounter;	
+}
+
+function unpack_encounter(controller, character_ids) {
+	var characters = []
+	character_ids.forEach((char_id) => {
+		var new_char = controller.get_by_type_and_id("character", char_id)
+		characters.push(characters);
+	});
+	return encounter;
+*/
+
+function start_combat_script(controller, data) {
+    var encounter = data.encounter;
+    start_combat(controller, encounter);
+}
+
+function start_combat(controller, encouter) {
+	controller.state.data.encounter = encounter;
+	start_new_round(controller, encounter)
+	start_new_turn(controller, encounter)
 }
 
 function end_combat(controller) {
@@ -75,10 +121,18 @@ function take_action(controller, encounter, action) {
 function start_new_round_script(controller, data) {
     var encounter = get_encounter_from_game_state(controller.state);
 	start_new_round(controller, encounter);
+	
 }
+
+// all combatants draw up to hand limits, reset initiative values to their base initiatives, 
+// and resolve effects that happen every turn.
 function start_new_round(controller, encounter) {
 	console.log("encounter.combatants");
 	console.log(encounter.combatants);
+	var is_combat_over = () => {return false};
+	if (is_combat_over(controller, encounter)) {
+		end_combat(controller)
+	}
 	
 	for (var i = 0; i < encounter.combatants.length; i++) {
 		var combatant = encounter.combatants[i];
@@ -101,51 +155,96 @@ function start_new_turn_script(controller, data) {
 
 function start_new_turn(controller, encounter) {
 	encounter.readied_actions = []
-	
+	encounter.current_actors = get_current_actors(encounter);
+	encounter.current_actors.forEach((char_index) => {
+		get_action(controller, encounter, char_index)
+	});
+	if (is_round_over(controller, encounter)) {
+		start_new_round(controller, encounter);
+	}
 }
 
+// returns a list of all characters in the given encounter which will act on the coming turn.
 function get_current_actors(encounter) {
-	
+	var current_actors = [];
+	var init = -1; // initiaitve of the current actor(s)
+	for (var i = 0; i < encounter.characters.length; i++) {
+		if (can_character_act(encounter.characters[i]) {
+			// if tied for most initiative, add to list of actors
+			if (encounter.characters[i].initiative == init) {
+				current_actors.push(i);
+			}
+			// if character's init is > current actor(s), remove current actor(s) and start a new list.
+			else if (encounter.characters[i].initiative > init) {
+				current_actors = [i];
+				init = encounter.characters[i].initiative;
+			}
+		}
+	}
+	return current_actors;
 }
 
 function can_character_act(character) {
 	if (character.initiative == 0) { return false; }
 	if (character.hand.length == 0) { return false; }
-	var min_cost = 
+	var min_cost = Number.MAX_SAFE_INTEGER;
 	for (var i = 0; i < character.hand.length; i++) {
-		
+		var card = character.hand[i];
+		if (card.cost <= min_cost) {
+			min_cost = card.cost;
+		}
 	}
-	
+	return min_cost <= character.initiative;
 }
 
 // get player input
 
-function get_actions_script(controller, data) {
-	get_action();
+function get_action_script(controller, data) {
+	// DEPRICATED - we probably do not need to export/expose this functions
+	var char_index = data.char_index;
+	var encounter = get_encounter_from_game_state(controller.state);
+	get_action(controller, encounter, char_index);
 }
 
-function get_action(controller, char_index) {
+function get_action(controller, encounter, char_index) {
 	
+	var trigger_args = {"actor_id": char_index}
+	// add a triiger to call after and action is selected.
 	controller.add_trigger({
 		"trigger_id": "get_action_" + char_index,
 		"signal_id": "get_action_signal_" + char_index,
-		"script_reference": {"id": "", "args": []}
+		// should call - resolve_actions(controller, data)
+		// TODO set sid and args
+		"script_reference": {"id": "", "args": trigger_args}
 	});
+	var character = encounter.characters[char_index];
+	// unless undefined, call the method to cause the character to select an action.
+	if (character.on_get_action) {
+		controller.run_script(character.on_get_action);
+	}
 }
 
-function resolve_actions(controller, data) {
+// data = {"actor_id": int, "action": action}
+function set_action_script(controller, data) {
 	var encounter - get_encounter_from_game_state(controller.state);
-	
-	encounter.readied_actions[data.actor_id] = data.action;
-	controller.remove_trigger("get_action_" + data.actor_id);
-	
+	var action = data.action;
+	var actor_id = data.actor_id;
+	function set_action(controller, encounter, action, actor_id)
+}
+
+// sets the action used by the character at the given index (actor_id) in the given encounter
+function set_action(controller, encounter, action, actor_id){
+	controller.remove_trigger("get_action_" + actor_id);
+	encounter.readied_actions[actor_id] = action;
+	resolve_actions(controller, encounter);
+}
+
+function resolve_actions(controller, encounter) {
 	var actions_ready = are_all_actions_ready(encounter); 
 	if(! actions_ready) {
 		return;
 	}
-	
-	var action_list = []; // TODO
-	take_turn(controller, encounter, action_list);	
+	take_turn(controller, encounter, encounter.readied_actions);	
 }
 
 // takes an encounter, and returns a boolean if all the actors for the current turn have selected their actions.
