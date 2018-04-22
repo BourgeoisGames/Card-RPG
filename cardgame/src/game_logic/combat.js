@@ -1,4 +1,7 @@
 
+var GET_ACTION_TRIGGER_ID = "get_action_";
+var GET_ACTION_SIGNAL_ID = "get_action_signal_";
+
 /**
  * take_turn_script: sid: "take_turn"
  * args: {
@@ -10,6 +13,7 @@ function take_turn_script(controller, data) {
     take_turn(controller, encounter, action_list);
 }
 
+// takes controller.state and returns the current encounter
 function get_encounter_from_game_state(game_state) {
     return game_state.data.encounter;
 }
@@ -67,7 +71,7 @@ function instantiate_default_encounter() {
         var new_character = controller.get_by_type_and_id("character", enemy_ids[i]);
 		// i+1 because player is at index 0 always
 		new_character.id = i+1;
-        encounter.combatants.push(new_character);
+        encounter.characters.push(new_character);
     } 
     controller.state.data.encounter = encounter;	
 }
@@ -92,7 +96,13 @@ function start_combat(controller, encouter) {
 	start_new_turn(controller, encounter)
 }
 
-function end_combat(controller) {
+// clean up combat
+function end_combat(controller, encounter, resolution) {
+	// call a script to do stuff based on how the combat was resolved
+	var outcome = encounter.outcomes[resolution];
+	controller.run_script(outcome, {})
+
+	// delete the now unused encounter from the gamestate
     delete controller.state.data.encounter;
 }
 
@@ -127,15 +137,20 @@ function start_new_round_script(controller, data) {
 // all combatants draw up to hand limits, reset initiative values to their base initiatives, 
 // and resolve effects that happen every turn.
 function start_new_round(controller, encounter) {
-	console.log("encounter.combatants");
-	console.log(encounter.combatants);
-	var is_combat_over = () => {return false};
-	if (is_combat_over(controller, encounter)) {
-		end_combat(controller)
+	console.log("encounter.characters");
+	console.log(encounter.characters);
+	
+	// script_ref "state_setter" will set the value of 
+	// "current_resolution" in the current encounter
+	controller.run_script(encounter.state_setter, {})
+	var combat_state = encounter.current_state;
+	// TODO eventually combat will have states and end states, and will only exit on an endstate, rather than any state other than "unresolved"
+	if (combat_state != "unresolved") {
+		end_combat(controller, encounter, combat_state)
 	}
 	
-	for (var i = 0; i < encounter.combatants.length; i++) {
-		var combatant = encounter.combatants[i];
+	for (var i = 0; i < encounter.characters.length; i++) {
+		var combatant = encounter.characters[i];
 		// Draw up to hand size
 		var card_draw = combatant.hand_size - combatant.hand.length;
 		draw_cards(controller, combatant, card_draw);
@@ -209,13 +224,13 @@ function get_action_script(controller, data) {
 function get_action(controller, encounter, char_index) {
 	
 	var trigger_args = {"actor_id": char_index}
-	// add a triiger to call after and action is selected.
+	// add a trigger to call after and action is selected.
 	controller.add_trigger({
-		"trigger_id": "get_action_" + char_index,
-		"signal_id": "get_action_signal_" + char_index,
+		"trigger_id": GET_ACTION_TRIGGER_ID + char_index,
+		"signal_id": GET_ACTION_SIGNAL_ID + char_index,
 		// should call - resolve_actions(controller, data)
 		// TODO set sid and args
-		"script_reference": {"id": "", "args": trigger_args}
+		"script_reference": {"id": RESOLVE_ACTIONS, "args": trigger_args}
 	});
 	var character = encounter.characters[char_index];
 	// unless undefined, call the method to cause the character to select an action.
@@ -226,7 +241,7 @@ function get_action(controller, encounter, char_index) {
 
 // data = {"actor_id": int, "action": action}
 function set_action_script(controller, data) {
-	var encounter - get_encounter_from_game_state(controller.state);
+	var encounter = get_encounter_from_game_state(controller.state);
 	var action = data.action;
 	var actor_id = data.actor_id;
 	function set_action(controller, encounter, action, actor_id)
@@ -234,9 +249,14 @@ function set_action_script(controller, data) {
 
 // sets the action used by the character at the given index (actor_id) in the given encounter
 function set_action(controller, encounter, action, actor_id){
-	controller.remove_trigger("get_action_" + actor_id);
+	controller.remove_trigger(GET_ACTION_TRIGGER_ID + actor_id);
 	encounter.readied_actions[actor_id] = action;
 	resolve_actions(controller, encounter);
+}
+
+function resolve_actions_script(ctrl, data) {
+	var encounter = get_encounter_from_game_state(data.state);
+	resolve_actions(ctrl, encounter)
 }
 
 function resolve_actions(controller, encounter) {
@@ -278,8 +298,8 @@ function is_round_over_script(controller, data) {
 	return is_round_over(controller, encounter);
 }
 function is_round_over(controller, encounter) {
-	for (var i = 0; i < encounter.combatants.length; i++) {
-		var character = encounter.combatants[i]
+	for (var i = 0; i < encounter.characters.length; i++) {
+		var character = encounter.characters[i]
 		if (character_can_act(character)) { return true; }
 	}
 	return false;
@@ -503,6 +523,8 @@ var gameEvent = [
     {"event_id": "", "game_scripts": [], "data": {}}
 ];
 
+var RESOLVE_ACTIONS = "resolve_actions";
+
 var scripts = {
 	// 
 	"take_turn_script": take_turn_script,
@@ -522,6 +544,9 @@ var scripts = {
 	// takes data.attacker and *.*.defender, and resolves the 
 	// attacker's active card against the defenders active card
 	"resolve_card_script": resolve_card_script,
+	
+	// takes no arge
+	RESOLVE_ACTIONS: resolve_actions_script,
 };
 
 export default gc => gc.add_scripts(scripts);

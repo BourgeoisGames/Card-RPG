@@ -1,0 +1,18 @@
+{
+  "characters": [
+    "monster1",
+	"monster2"
+  ],
+  "current_state": "not started",
+  "state_setter": {
+    "script_id": "combat_state_update",
+	"args": [
+	  "arg1",
+	  "arg2",
+	  3
+	]
+  },
+  "readied_actions": [], 
+  "current_actors": [],
+  "history": []
+}
