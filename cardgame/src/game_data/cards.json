@@ -1,0 +1,238 @@
+{
+  "jab": {
+	"name": jab-",
+    "description": "no effects",
+    "effects": {},
+    "attack": 2,
+    "defense": 0,
+    "cost": 0
+  },
+  "sucker_punch": {
+	"name": "sucker punch",
+    "description": "does not become active",
+    "effects": {},
+    "attack": 1,
+    "defense": 0,
+    "cost": 0
+  },
+  "medium_attack": {
+	"name": "medium_attack",
+    "description": "no effects",
+    "effects": {},
+    "attack": 4,
+    "defense": 1,
+    "cost": 2
+  },
+  "flurry_of_blows": {
+	"name": "flurry of blows",
+    "description": "+1 damage for each card played this round",
+    "effects": {
+		"???": "+1 damage for each card played this round"
+	},
+    "attack": 2,
+    "defense": 0,
+    "cost": 1
+  },
+  "kiya": {
+	"name": "kiya",
+    "description": "+2 attack to next card played this round",
+    "effects": {
+		"???": "+2 attack to next card played this round"
+	},
+    "attack": 0,
+    "defense": 0,
+    "cost": 0
+  },
+  "crush": {
+	"name": "crush",
+    "description": "cost and damage both equal remaining initiative",
+    "effects": {
+      "onPlay": "cost and damage both equal remaining initiative"
+	},
+    "attack": -1,
+    "defense": 0,
+    "cost": -1
+  },
+  "follow_through": {
+	"name": "follow through",
+    "description": "activate attack with current active card (does not become active)",
+    "effects": {
+	  "onPlay": "activate attack with current active card (does not become active)"
+	},
+    "attack": 0,
+    "defense": 0,
+    "cost": 3
+  },
+  
+  "footwork": {
+	"name": "footwork",
+    "description": "+1 defense to next card played",
+    "effects": {
+	  "onPlay": ""
+	},
+    "attack": 0,
+    "defense": 0,
+    "cost": 0
+  },
+  "defend": {
+	"name": "defend",
+    "description": "no effects",
+    "effects": {},
+    "attack": -,
+    "defense": -,
+    "cost": -
+  },
+  "defense 2": {
+	"name": "defense 2",
+    "description": "no effects",
+    "effects": {},
+    "attack": 0,
+    "defense": 2,
+    "cost": 1
+  },
+  "block": {
+	"name": "block",
+    "description": "discard this card after taking damage",
+    "effects": {
+	  "onDamageTaken": "discard this card after taking damage"
+	},
+    "attack": 0,
+    "defense": 5,
+    "cost": 2
+  },
+  "evasion": {
+	"name": "evasion",
+    "description": "X equals remaining initiative",
+    "effects": {
+	  "onPlay": "set defense and cost to 'initiative'"
+	},
+    "attack": 0,
+    "defense": -1,
+    "cost": -1
+  },
+  
+  
+  "anticipate": {
+	"name": "anticipate",
+    "description": "+2 initiative",
+    "effects": {
+	  "onPlay": "+2 init"
+	},
+    "attack": 0,
+    "defense": 0,
+    "cost": 0
+  },
+  "trip": {
+	"name": "trip",
+    "description": "-2 initiative of target",
+    "effects": {},
+    "attack": 1,
+    "defense": 1,
+    "cost": 2 
+  },
+  "reflexes": {
+	"name": "reflexes",
+    "description": "+1 base initiative",
+    "effects": {
+	  "onPlay": "increase base initiative"
+	},
+    "attack": 0,
+    "defense": 2,
+    "cost": 1
+  },
+  "cripple": {
+	"name": "cripple",
+    "description": "-1 base initiative to target.",
+    "effects": {
+	  "onPlay": 
+	},
+    "attack": 2,
+    "defense": 0,
+    "cost": 2
+  },
+  
+  "overpower": {
+	"name": "overpower",
+    "description": "discard target’s active card",
+    "effects": {
+	  "onPlay": "discard target's active card"
+	},
+    "attack": 1,
+    "defense": 0,
+    "cost": 1
+  },
+  "feint": {
+	"name": "feint",
+    "description": "reduce target’s active card’s defense by 2",
+    "effects": {
+	  "onPlay": "reduce target’s active card’s defense by 2"
+	},
+    "attack": 0,
+    "defense": 0,
+    "cost": 0
+
+
+  },
+  "prepared": {
+	"name": "prepared",
+    "description": "draw 2 cards",
+    "effects": {
+	  "onPlay": "draw 2 cards"
+	},
+    "attack": 0,
+    "defense": 2,
+    "cost": 2
+  },
+  "improvise": { 
+	"name": "improvise",
+    "description": "discover 2 new cards",
+    "effects": {
+	  "onPlay": "discover 2 new cards"
+	},
+    "attack": 0,
+    "defense": 0,
+    "cost": 1
+  },
+  "adapt": { 
+	"name": "adapt",
+    "description": "sideline cards from your hand, and draw number of cards side-lined +1",
+    "effects": {
+	  "onPlay": "mulligan"
+	},
+    "attack": 0,
+    "defense": 0,
+    "cost": 0
+  },
+  "ambush": { 
+	"name": "ambush",
+    "description": "+1 init, +1 card. If opponent has no active card +1 init, +1 card.",
+    "effects": {
+	  "onPlayed": "+1 init, +1 card. If opponent has no active card +1 init, +1 card."
+	},
+    "attack": 0,
+    "defense": 0,
+    "cost": 0
+  },
+  
+  "endurance": {
+	"name": "endurance",
+    "description": "sideline your active card, then heal 1 HP",
+    "effects": {
+	  "onPlay": "sideline your active card, then heal 1 HP"
+	},
+    "attack": 0,
+    "defense": 0,
+    "cost": 0
+  },
+  "resilience": { 
+	"name": "resilience",
+    "description": "heal 3 HP",
+    "effects": {
+	  "onPlay": "heal 3 HP"
+	},
+    "attack": 0,
+    "defense": 2,
+    "cost": 2
+  }
+  
+}
