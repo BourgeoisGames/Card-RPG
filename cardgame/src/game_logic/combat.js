@@ -481,7 +481,7 @@ function resolve_card(controller, encounter, action) {
         damage = 0;
     }
     defender.hp -= damage;
-	var hook_args = {"actor": attacker, "target": defender, "encounter": encounter}
+	var hook_args = {"actor": attacker, "target": defender}
 	resolve_statuses("status_onCardResolved", controller, attacker);
     execute_card_effect("onCardResolved", controller, attacker.active_card, hook_args);
     resolve_statuses("status_onCardResolvedAgainst", controller, defender);

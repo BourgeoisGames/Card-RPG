@@ -1,6 +1,6 @@
 {
   "jab": {
-	"name": jab-",
+	"name": jab",
     "description": "no effects",
     "effects": {},
     "attack": 2,
@@ -25,7 +25,7 @@
   },
   "flurry_of_blows": {
 	"name": "flurry of blows",
-    "description": "+1 damage for each card played this round",
+    "description": "TODO: +1 damage for each card played this round",
     "effects": {
 		"???": "+1 damage for each card played this round"
 	},
@@ -35,7 +35,7 @@
   },
   "kiya": {
 	"name": "kiya",
-    "description": "+2 attack to next card played this round",
+    "description": "TODO: +2 attack to next card played this round",
     "effects": {
 		"???": "+2 attack to next card played this round"
 	},
@@ -47,15 +47,15 @@
 	"name": "crush",
     "description": "cost and damage both equal remaining initiative",
     "effects": {
-      "onPlay": "cost and damage both equal remaining initiative"
+      "onPlay": ["initiaitve_into_attack", {}]
 	},
-    "attack": -1,
+    "attack": 0,
     "defense": 0,
-    "cost": -1
+    "cost": 0
   },
   "follow_through": {
 	"name": "follow through",
-    "description": "activate attack with current active card (does not become active)",
+    "description": "TODO: activate attack with current active card (does not become active)",
     "effects": {
 	  "onPlay": "activate attack with current active card (does not become active)"
 	},
@@ -66,7 +66,7 @@
   
   "footwork": {
 	"name": "footwork",
-    "description": "+1 defense to next card played",
+    "description": "TODO: +1 defense to next card played",
     "effects": {
 	  "onPlay": ""
 	},
@@ -74,16 +74,16 @@
     "defense": 0,
     "cost": 0
   },
-  "defend": {
-	"name": "defend",
+  "defend 2": {
+	"name": "defend 2",
     "description": "no effects",
     "effects": {},
-    "attack": -,
-    "defense": -,
-    "cost": -
+    "attack": 0,
+    "defense": 4,
+    "cost": 2
   },
-  "defense 2": {
-	"name": "defense 2",
+  "defense": {
+	"name": "defense",
     "description": "no effects",
     "effects": {},
     "attack": 0,
@@ -92,7 +92,7 @@
   },
   "block": {
 	"name": "block",
-    "description": "discard this card after taking damage",
+    "description": "TODO: discard this card after taking damage",
     "effects": {
 	  "onDamageTaken": "discard this card after taking damage"
 	},
@@ -104,11 +104,11 @@
 	"name": "evasion",
     "description": "X equals remaining initiative",
     "effects": {
-	  "onPlay": "set defense and cost to 'initiative'"
+	  "onPlay": ["initiaitve_into_defense", {}]
 	},
     "attack": 0,
-    "defense": -1,
-    "cost": -1
+    "defense": 0,
+    "cost": 0
   },
   
   
@@ -116,7 +116,7 @@
 	"name": "anticipate",
     "description": "+2 initiative",
     "effects": {
-	  "onPlay": "+2 init"
+	  "onPlay": ["buff_actor", {"initiative": 2}]
 	},
     "attack": 0,
     "defense": 0,
@@ -125,14 +125,16 @@
   "trip": {
 	"name": "trip",
     "description": "-2 initiative of target",
-    "effects": {},
+    "effects": {
+	  "onResolved": ["buff_target", {"initiative": -2}]
+	},
     "attack": 1,
     "defense": 1,
     "cost": 2 
   },
   "reflexes": {
 	"name": "reflexes",
-    "description": "+1 base initiative",
+    "description": "TODO: +1 base initiative",
     "effects": {
 	  "onPlay": "increase base initiative"
 	},
@@ -142,7 +144,7 @@
   },
   "cripple": {
 	"name": "cripple",
-    "description": "-1 base initiative to target.",
+    "description": "TODO: -1 base initiative to target.",
     "effects": {
 	  "onPlay": 
 	},
@@ -165,7 +167,7 @@
 	"name": "feint",
     "description": "reduce target’s active card’s defense by 2",
     "effects": {
-	  "onPlay": "reduce target’s active card’s defense by 2"
+	  "onPlay": ["buff_target", {"defense": -2}]
 	},
     "attack": 0,
     "defense": 0,

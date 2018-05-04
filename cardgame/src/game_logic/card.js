@@ -19,21 +19,22 @@ function isCard(obj) {
 
 /* Card Effect Types
  * 
- * onPlayCard               - resolves as soon as the card is played
+ * onPlayCard               - resolves as soon as the card is played <args: {target, actor}>
  * &&& onCardPlayedAgainst      - resolves as soon as the card is played
- * onCardResolved           - resolves while the card is resolving
- * onCardResolvedAgainst    - resolves while the card is resolving
+ * onCardResolved           - resolves while the card is resolving <args: {target, actor}>
+ * onCardResolvedAgainst    - resolves while the card is resolving <args: {target, actor}>
  * onRemovedFromActive      - resolves when the card is replaced by another card as
- *                             your active card
+ *                              your active card <args: {target, actor}>
  * onAttacked               - resolves when an attack is made, while this card is 
- *                             active
+ *                              active <args: {target, actor}>
  * onDealsDamage            - resolves when this card is resolved, and successfully 
- *                             deals damage
+ *                              deals damage <args: {target, actor}>
  * onDamaged                - resolves when another card resolves, while this card is 
- *                             active, which deals damage.
+ *                              active, which deals damage. <args: {target, actor}>
  * onBlocksAttack           - resolves when an attack, with at least 1 attack is made,
- *                             that deals no damage
- * onAttackBlocked              - resolves when card is played, but fails to deal damage
+ *                              that deals no damage <args: {target, actor}>
+ * onAttackBlocked          - resolves when card is played, but fails to deal damage 
+ *                              <args: {target, actor}>
  * onDiscarded              - resolves as soon as the card is added to the discard
  * onRemovedFromHand        - resolves as soon as the card is removed from the hand.
  * onDrawn                  - resolves as soon as the card is drawn from the deck
