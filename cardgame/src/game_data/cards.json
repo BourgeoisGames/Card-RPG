@@ -5,7 +5,8 @@
     "effects": {},
     "attack": 2,
     "defense": 0,
-    "cost": 0
+    "cost": 0,
+	"becomes_active": true
   },
   "sucker_punch": {
 	"name": "sucker punch",
@@ -13,7 +14,8 @@
     "effects": {},
     "attack": 1,
     "defense": 0,
-    "cost": 0
+    "cost": 0,
+	"becomes_active": false
   },
   "medium_attack": {
 	"name": "medium_attack",
@@ -21,7 +23,8 @@
     "effects": {},
     "attack": 4,
     "defense": 1,
-    "cost": 2
+    "cost": 2,
+	"becomes_active": true
   },
   "flurry_of_blows": {
 	"name": "flurry of blows",
@@ -31,7 +34,8 @@
 	},
     "attack": 2,
     "defense": 0,
-    "cost": 1
+    "cost": 1,
+	"becomes_active": true
   },
   "kiya": {
 	"name": "kiya",
@@ -41,7 +45,8 @@
 	},
     "attack": 0,
     "defense": 0,
-    "cost": 0
+    "cost": 0,
+	"becomes_active": true
   },
   "crush": {
 	"name": "crush",
@@ -51,7 +56,8 @@
 	},
     "attack": 0,
     "defense": 0,
-    "cost": 0
+    "cost": 0,
+	"becomes_active": true
   },
   "follow_through": {
 	"name": "follow through",
@@ -61,7 +67,8 @@
 	},
     "attack": 0,
     "defense": 0,
-    "cost": 3
+    "cost": 3,
+	"becomes_active": true
   },
   
   "footwork": {
@@ -72,7 +79,8 @@
 	},
     "attack": 0,
     "defense": 0,
-    "cost": 0
+    "cost": 0,
+	"becomes_active": true
   },
   "defend 2": {
 	"name": "defend 2",
@@ -80,7 +88,8 @@
     "effects": {},
     "attack": 0,
     "defense": 4,
-    "cost": 2
+    "cost": 2,
+	"becomes_active": true
   },
   "defense": {
 	"name": "defense",
@@ -88,7 +97,8 @@
     "effects": {},
     "attack": 0,
     "defense": 2,
-    "cost": 1
+    "cost": 1,
+	"becomes_active": true
   },
   "block": {
 	"name": "block",
@@ -98,7 +108,8 @@
 	},
     "attack": 0,
     "defense": 5,
-    "cost": 2
+    "cost": 2,
+	"becomes_active": true
   },
   "evasion": {
 	"name": "evasion",
@@ -108,7 +119,8 @@
 	},
     "attack": 0,
     "defense": 0,
-    "cost": 0
+    "cost": 0,
+	"becomes_active": true
   },
   
   
@@ -120,7 +132,8 @@
 	},
     "attack": 0,
     "defense": 0,
-    "cost": 0
+    "cost": 0,
+	"becomes_active": true
   },
   "trip": {
 	"name": "trip",
@@ -130,7 +143,8 @@
 	},
     "attack": 1,
     "defense": 1,
-    "cost": 2 
+    "cost": 2 ,
+	"becomes_active": true
   },
   "reflexes": {
 	"name": "reflexes",
@@ -140,7 +154,8 @@
 	},
     "attack": 0,
     "defense": 2,
-    "cost": 1
+    "cost": 1,
+	"becomes_active": true
   },
   "cripple": {
 	"name": "cripple",
@@ -150,7 +165,8 @@
 	},
     "attack": 2,
     "defense": 0,
-    "cost": 2
+    "cost": 2,
+	"becomes_active": true
   },
   
   "overpower": {
@@ -161,7 +177,8 @@
 	},
     "attack": 1,
     "defense": 0,
-    "cost": 1
+    "cost": 1,
+	"becomes_active": true
   },
   "feint": {
 	"name": "feint",
@@ -171,7 +188,8 @@
 	},
     "attack": 0,
     "defense": 0,
-    "cost": 0
+    "cost": 0,
+	"becomes_active": true
 
 
   },
@@ -179,21 +197,23 @@
 	"name": "prepared",
     "description": "draw 2 cards",
     "effects": {
-	  "onPlay": "draw 2 cards"
+	  "onPlay": ["draw_cards", {"n_cards": 2}
 	},
     "attack": 0,
     "defense": 2,
-    "cost": 2
+    "cost": 2,
+	"becomes_active": true
   },
   "improvise": { 
 	"name": "improvise",
-    "description": "discover 2 new cards",
+    "description": "TODO: discover 2 new cards",
     "effects": {
-	  "onPlay": "discover 2 new cards"
+	  "onPlay": "TODO: discover 2 new cards"
 	},
     "attack": 0,
     "defense": 0,
-    "cost": 1
+    "cost": 1,
+	"becomes_active": true
   },
   "adapt": { 
 	"name": "adapt",
@@ -203,7 +223,8 @@
 	},
     "attack": 0,
     "defense": 0,
-    "cost": 0
+    "cost": 0,
+	"becomes_active": true
   },
   "ambush": { 
 	"name": "ambush",
@@ -213,7 +234,8 @@
 	},
     "attack": 0,
     "defense": 0,
-    "cost": 0
+    "cost": 0,
+	"becomes_active": true
   },
   
   "endurance": {
@@ -224,7 +246,8 @@
 	},
     "attack": 0,
     "defense": 0,
-    "cost": 0
+    "cost": 0,
+	"becomes_active": true
   },
   "resilience": { 
 	"name": "resilience",
@@ -234,7 +257,8 @@
 	},
     "attack": 0,
     "defense": 2,
-    "cost": 2
+    "cost": 2,
+	"becomes_active": true
   }
   
 }

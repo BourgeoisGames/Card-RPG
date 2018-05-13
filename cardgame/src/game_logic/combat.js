@@ -184,7 +184,7 @@ function get_current_actors(encounter) {
 	var current_actors = [];
 	var init = -1; // initiaitve of the current actor(s)
 	for (var i = 0; i < encounter.characters.length; i++) {
-		if (can_character_act(encounter.characters[i]) {
+		if (can_character_act(encounter.characters[i])) {
 			// if tied for most initiative, add to list of actors
 			if (encounter.characters[i].initiative == init) {
 				current_actors.push(i);
@@ -244,7 +244,7 @@ function set_action_script(controller, data) {
 	var encounter = get_encounter_from_game_state(controller.state);
 	var action = data.action;
 	var actor_id = data.actor_id;
-	function set_action(controller, encounter, action, actor_id)
+	set_action(controller, encounter, action, actor_id)
 }
 
 // sets the action used by the character at the given index (actor_id) in the given encounter
@@ -394,21 +394,35 @@ function resolve_statuses(hook_id, controller, character) {
 
 function play_card(controller, attacker, target, encounter, card_index) {
     var card = attacker.hand[card_index];
+	if (card.cost > attacker.initiaitve)
+		throw {"msg": "not enough initiative to play the selected card"}
     console.log("play_card - card:");
     console.log(card);
 	var hook_args = {"actor": attacker, "target": target}
 	resolve_statuses("status_onPlayCard", controller, attacker);
     execute_card_effect("onPlayCard", controller, card, hook_args);
     
-    // execute "card.play_card 
-    encounter.history.push({"character": attacker, "card": card});
-	hook_args.card_replaced_with = card;
-	resolve_statuses("status_onRemovedFromActive", controller, attacker);
-    execute_card_effect("onRemovedFromActive", controller, attacker.active_card, hook_args);
-    attacker.previousCard = attacker.active_card;
-    attacker.active_card = card;
-    attacker.initiative -= card.cost;
-    remove_card_from_hand(controller, attacker, card_index)
+	attacker.initiative -= card.cost;
+	encounter.history.push({"character": attacker, "card": card});
+	// if card does not become active, it is immediately discarded.
+	if (card.becomes_active || typeof(card.becomes_active)==="undefined") {
+		hook_args.card_replaced_with = card;
+		resolve_statuses("status_onRemovedFromActive", controller, attacker);
+		execute_card_effect("onRemovedFromActive", controller, attacker.active_card, hook_args);
+		
+		add_card_to_discard(controller, attacker, attacker.active_card);
+		attacker.previousCard = attacker.active_card;
+		attacker.active_card = card;
+		remove_card_from_hand(controller, attacker, card_index);
+	} else {
+		discard_card_from_hand(controller, attacker, card_index);
+	}
+}
+
+function draw_cards_script(controller, data) {
+	var character = data.character;
+	var numb_cards = data.n_cards;
+	draw_cards(controller, character, numb_cards)
 }
 
 function draw_cards(controller, character, numb_cards) {
@@ -441,23 +455,35 @@ function shuffle_deck(controller, character) {
     character.deck = new_deck;
 }
 
-function remove_card_from_hand(controller, character, index) {
-    var card = character.hand[index];
+function pop_card_from_hand(controller, character, index) {
+	var card_removed = character.hand[index];
     console.log("remove_card_from_hand: card; " + card);
     character.hand.splice(index, 1);
     console.log(character);
+	
 	var hook_args = {"actor": character}
 	resolve_statuses("status_onRemovedFromHand", controller, character);
     execute_card_effect("onRemovedFromHand", controller, card, hook_args);
+	
+	return card_removed;
+}
+
+function discard_card_from_hand(controller, character, index) {
+//    var card = character.hand[index];
+//    console.log("remove_card_from_hand: card; " + card);
+//    character.hand.splice(index, 1);
+//    console.log(character);
+	var card = pop_card_from_hand(controller, character, index);
+	add_card_to_discard(controller, character, card);
+}
+
+function add_card_to_discard(controller, character, card) {
     
     character.discard.push(card.card_id);
+	var hook_args = {"actor": character}
 	resolve_statuses("status_onDiscarded", controller, character);
     execute_card_effect("onDiscarded", controller, card, hook_args);
-}
-function add_card_to_discard(controller, character, card_id) {
-    // NOTE: does not invoke "onDiscarded" scripts, this should be invoked
-    // after this function is called. Since this function does not take a card 
-    // (which is required for invoking the card effect)
+	
     console.log("combar.js - add_card_to_discard");
     console.log(character.discard);
 }
@@ -511,6 +537,33 @@ function resolve_card(controller, encounter, action) {
     }
 }
 
+function sideline_cards_script(ctrl, data) {
+	var cards = data.cards;
+	var character = data.character;
+	sideline_cards(ctrl, cards, character)
+}
+
+// takse an array of cards, and a character.
+// adds the cards to the BOTTOM of the deck of the character, with the last 
+// list elements must be card objects.
+function sideline_cards(ctrl, cards, character) {
+	var card_ids = 
+	// TODO - make sure the order of opperations is correct here, and document exactly how is should work.
+	for (var i = 0; i < cards.length; i++) {
+		if (typeof(cards[i]) === "object") {
+			card_ids[i] = cards[i].card_id;
+			// TODO - add call for onSidelined hook
+			// TODO - add call for onRemovedFromPlay hook (and add that to discard function as well)
+		}
+	}
+	console.log("sideline cards (before/after):");
+	console.log(character.deck);
+	character.deck = card_ids.concat(character.deck);
+	console.log(character.deck);
+}
+
+
+
 
 var gameScrips = [
     {"game_script_id": "take_action", "script": take_action_script},
@@ -524,6 +577,10 @@ var gameEvent = [
 ];
 
 var RESOLVE_ACTIONS = "resolve_actions";
+
+
+// TODO - add "removedFromPlay" hook for when a card is discarded, sidelined, or deleted
+// 
 
 var scripts = {
 	// 
@@ -547,6 +604,9 @@ var scripts = {
 	
 	// takes no arge
 	RESOLVE_ACTIONS: resolve_actions_script,
+	// takes "cards" (list of cards to be sidelined) and "character." Adds cards to bottom of character's deck.
+	// "cards" may contain cardId's or card objects (which will be converted to cardId's)
+	"sideline_cards_script": sideline_cards_script
 };
 
 export default gc => gc.add_scripts(scripts);
