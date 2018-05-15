@@ -399,16 +399,18 @@ function play_card(controller, attacker, target, encounter, card_index) {
     console.log("play_card - card:");
     console.log(card);
 	var hook_args = {"actor": attacker, "target": target}
-	resolve_statuses("status_onPlayCard", controller, attacker);
-    execute_card_effect("onPlayCard", controller, card, hook_args);
+//	resolve_statuses("status_onPlayCard", controller, attacker);
+//    execute_card_effect("onPlayCard", controller, card, hook_args);
+	activate_card_hook("onPlayCard", controller, character, card, hook_args);
     
 	attacker.initiative -= card.cost;
 	encounter.history.push({"character": attacker, "card": card});
 	// if card does not become active, it is immediately discarded.
 	if (card.becomes_active || typeof(card.becomes_active)==="undefined") {
 		hook_args.card_replaced_with = card;
-		resolve_statuses("status_onRemovedFromActive", controller, attacker);
-		execute_card_effect("onRemovedFromActive", controller, attacker.active_card, hook_args);
+//		resolve_statuses("status_onRemovedFromActive", controller, attacker);
+//		execute_card_effect("onRemovedFromActive", controller, attacker.active_card, hook_args);
+		activate_card_hook("onRemovedFromActive", controller, character, card, hook_args);
 		
 		add_card_to_discard(controller, attacker, attacker.active_card);
 		attacker.previousCard = attacker.active_card;
@@ -436,12 +438,10 @@ function draw_one_card(controller, character) {
     var new_card = controller.get_by_type_and_id("card", card_id);
 	new_card.card_id = card_id;
     character.hand.push(new_card);
-	var hook_args = {"actor": character}
-	console.log("1");
-    resolve_statuses("status_onDrawCard", controller, character);
-	console.log("2");
-    execute_card_effect("onDrawn", controller, new_card, hook_args);
-	console.log("3");
+	var hook_args = {"actor": character};
+//    resolve_statuses("status_onDrawCard", controller, character);
+//    execute_card_effect("onDrawn", controller, new_card, hook_args);
+	activate_card_hook("onDrawn", controller, character, card, hook_args);
 }
 
 function shuffle_deck(controller, character) {
@@ -462,18 +462,16 @@ function pop_card_from_hand(controller, character, index) {
     console.log(character);
 	
 	var hook_args = {"actor": character}
-	resolve_statuses("status_onRemovedFromHand", controller, character);
-    execute_card_effect("onRemovedFromHand", controller, card, hook_args);
+//	resolve_statuses("status_onRemovedFromHand", controller, character);
+//    execute_card_effect("onRemovedFromHand", controller, card, hook_args);
+	activate_card_hook("onRemovedFromHand", controller, character, card, hook_args);
 	
 	return card_removed;
 }
 
 function discard_card_from_hand(controller, character, index) {
-//    var card = character.hand[index];
-//    console.log("remove_card_from_hand: card; " + card);
-//    character.hand.splice(index, 1);
-//    console.log(character);
 	var card = pop_card_from_hand(controller, character, index);
+    console.log("remove_card_from_hand: card; " + card);
 	add_card_to_discard(controller, character, card);
 }
 
@@ -481,11 +479,21 @@ function add_card_to_discard(controller, character, card) {
     
     character.discard.push(card.card_id);
 	var hook_args = {"actor": character}
-	resolve_statuses("status_onDiscarded", controller, character);
-    execute_card_effect("onDiscarded", controller, card, hook_args);
+//	resolve_statuses("status_onDiscarded", controller, character);
+//    execute_card_effect("onDiscarded", controller, card, hook_args);
+//	resolve_statuses("status_removedFromPlay", controller, character);
+//    execute_card_effect("removedFromPlay", controller, card, hook_args);
+	activate_card_hook("onDiscarded", controller, character, card, hook_args);
+	activate_card_hook("removedFromPlay", controller, character, card, hook_args);
 	
     console.log("combar.js - add_card_to_discard");
     console.log(character.discard);
+}
+
+function activate_card_hook(key, controller, character, card, hook_args) {
+	// TODO - call trigger 
+    execute_card_effect(key, controller, card, hook_args);
+	resolve_statuses(key, controller, character);
 }
     
 function resolve_card_script(controller, data) { 
@@ -508,31 +516,40 @@ function resolve_card(controller, encounter, action) {
     }
     defender.hp -= damage;
 	var hook_args = {"actor": attacker, "target": defender}
-	resolve_statuses("status_onCardResolved", controller, attacker);
-    execute_card_effect("onCardResolved", controller, attacker.active_card, hook_args);
-    resolve_statuses("status_onCardResolvedAgainst", controller, defender);
-    execute_card_effect("onCardResolvedAgainst", controller, defender.active_card, hook_args);
+//	resolve_statuses("status_onCardResolved", controller, attacker);
+//    execute_card_effect("onCardResolved", controller, attacker.active_card, hook_args);
+	activate_card_hook("onCardResolved", controller, character, card, hook_args);
+//    resolve_statuses("status_onCardResolvedAgainst", controller, defender);
+//    execute_card_effect("onCardResolvedAgainst", controller, defender.active_card, hook_args);
+	activate_card_hook("onCardResolvedAgainst", controller, character, card, hook_args);
     if (isCard(defender.active_card)) {
-        resolve_statuses("status_onAttacked", controller, defender);
-        execute_card_effect("onAttacked", controller, defender.active_card, hook_args);
+//        resolve_statuses("status_onAttacked", controller, defender);
+//        execute_card_effect("onAttacked", controller, defender.active_card, hook_args);
+		activate_card_hook("onAttacked", controller, character, card, hook_args);
         if (damage > 0) {
-            resolve_statuses("status_onDealsDamage", controller, attacker);
-            execute_card_effect("onDealsDamage", controller, attacker.active_card, hook_args);
-            resolve_statuses("status_onDamaged", controller, defender);
-            execute_card_effect("onDamaged", controller, defender.active_card, hook_args);
+//            resolve_statuses("status_onDealsDamage", controller, attacker);
+//            execute_card_effect("onDealsDamage", controller, attacker.active_card, hook_args);
+			activate_card_hook("onDealsDamage", controller, character, card, hook_args);
+//            resolve_statuses("status_onDamaged", controller, defender);
+//            execute_card_effect("onDamaged", controller, defender.active_card, hook_args);
+			activate_card_hook("onDamaged", controller, character, card, hook_args);
         } else if (attacker.active_card.attack != 0) {
-            resolve_statuses("status_onAttackBlocked", controller, attacker);
-            execute_card_effect("onAttackBlocked", controller, attacker.active_card, hook_args);
-            resolve_statuses("status_onBlocksAttack", controller, defender);
-            execute_card_effect("onBlocksAttack", controller, defender.active_card, hook_args);
+//            resolve_statuses("status_onAttackBlocked", controller, attacker);
+//            execute_card_effect("onAttackBlocked", controller, attacker.active_card, hook_args);
+			activate_card_hook("onAttackBlocked", controller, character, card, hook_args);
+//            resolve_statuses("status_onBlocksAttack", controller, defender);
+//            execute_card_effect("onBlocksAttack", controller, defender.active_card, hook_args);
+			activate_card_hook("onBlocksAttack", controller, character, card, hook_args);
         }
     } else {
         if (damage > 0) {
-            resolve_statuses("status_onDealsDamage", controller, attacker);
-            execute_card_effect("onDealsDamage", controller, attacker.active_card, hook_args);
+            //resolve_statuses("status_onDealsDamage", controller, attacker);
+            //execute_card_effect("onDealsDamage", controller, attacker.active_card, hook_args);
+			activate_card_hook("onDealsDamage", controller, character, card, hook_args);
         } else if (attacker.active_card.attack != 0) {
-            resolve_statuses("status_onAttackBlocked", controller, attacker);
-            execute_card_effect("onAttackBlocked", controller, attacker.active_card, hook_args);
+            //resolve_statuses("status_onAttackBlocked", controller, attacker);
+            //execute_card_effect("onAttackBlocked", controller, attacker.active_card, hook_args);
+			activate_card_hook("onAttackBlocked", controller, character, card, hook_args);
         }
     }
 }
@@ -547,13 +564,17 @@ function sideline_cards_script(ctrl, data) {
 // adds the cards to the BOTTOM of the deck of the character, with the last 
 // list elements must be card objects.
 function sideline_cards(ctrl, cards, character) {
-	var card_ids = 
+	var card_ids = []
 	// TODO - make sure the order of opperations is correct here, and document exactly how is should work.
 	for (var i = 0; i < cards.length; i++) {
 		if (typeof(cards[i]) === "object") {
-			card_ids[i] = cards[i].card_id;
-			// TODO - add call for onSidelined hook
-			// TODO - add call for onRemovedFromPlay hook (and add that to discard function as well)
+			card_ids[i] = cards[i].card_id
+			//resolve_statuses("status_onSidelined", controller, character);
+			//execute_card_effect("onSidelined", controller, card, hook_args);
+			activate_card_hook("onSidelined", controller, character, card, hook_args);
+			//resolve_statuses("status_removedFromPlay", controller, character);
+			//execute_card_effect("removedFromPlay", controller, card, hook_args);
+			activate_card_hook("removedFromPlay", controller, character, card, hook_args);
 		}
 	}
 	console.log("sideline cards (before/after):");
@@ -578,9 +599,6 @@ var gameEvent = [
 
 var RESOLVE_ACTIONS = "resolve_actions";
 
-
-// TODO - add "removedFromPlay" hook for when a card is discarded, sidelined, or deleted
-// 
 
 var scripts = {
 	// 

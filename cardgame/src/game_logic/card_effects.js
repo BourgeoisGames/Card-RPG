@@ -153,6 +153,7 @@ function concat_args(obj1, obj2) {
 
 function sideline_active(ctrl, args) {
 	
+	var card 
 	ctrl.run_script({"id": "sideline_cards_script", {"actor": args.hook_args.actor}})
 }
 
