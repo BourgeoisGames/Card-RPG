@@ -158,8 +158,9 @@ function start_new_round(controller, encounter) {
 		combatant.initiatve = combatant.base_initiative;
 		decriment_status_effects(combatant);
 		
-		resolve_statuses("status_onStartRound", controller, combatant);
-		execute_card_effect("onStartRound", controller, combatant.active_card, {});
+//		resolve_statuses("status_onStartRound", controller, combatant);
+//		execute_card_effect("onStartRound", controller, combatant.active_card, {});
+		activate_card_hook("onStartRound", controller, character, card, hook_args);
 	}
 }
 
@@ -491,7 +492,9 @@ function add_card_to_discard(controller, character, card) {
 }
 
 function activate_card_hook(key, controller, character, card, hook_args) {
-	// TODO - call trigger 
+	hook_args.card = card;
+	var triggerId = key + character_id
+	controller.trigger(triggerId, hook_args)
     execute_card_effect(key, controller, card, hook_args);
 	resolve_statuses(key, controller, character);
 }

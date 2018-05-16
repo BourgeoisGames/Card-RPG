@@ -39,6 +39,7 @@ function isCard(obj) {
  * onRemovedFromHand        - resolves as soon as the card is removed from the hand.
  * onDrawn                  - resolves as soon as the card is drawn from the deck
  * onStartRound
+ * onSidelined				- 
  * &&& onOpponentDraws          - resolves as soon as the card is drawn from the deck
  */
  // &&& field not yet implemented in the pipeline

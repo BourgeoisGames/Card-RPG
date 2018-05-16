@@ -65,6 +65,7 @@ var sampleCard2 = {
 }
 
 var character1 = {
+	"character_id": 1,
     "name": "character1",
     "hand": [sampleCard1],
     "deck": ["card_id1"],
@@ -74,6 +75,7 @@ var character1 = {
     "active_card": $.extend(true, {}, sampleCard1)
 }
 var character2 = {
+	"character_id": 1,
     "name": "character2",
     "hand": [sampleCard1],
     "deck": ["card_id1"],
