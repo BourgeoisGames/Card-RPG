@@ -22,7 +22,7 @@ function true_damage(ctrl, args) {
   *  Sets the cost equal to the character that played the card's remaining 
   */
 function initiaitve_into_attack(ctrl, args) {
-	var card = args.card;
+	var card = args.hook_args.card;
 	var attacker = args.hook_args.actor
 	
 	card.cost = attacker.initiative;
@@ -34,7 +34,7 @@ function initiaitve_into_attack(ctrl, args) {
   *  Sets the cost equal to the character that played the card's remaining 
   */
 function initiaitve_into_defense(ctrl, args) {	
-	var card = args.card;
+	var card = args.hook_args.card;
 	var attacker = args.hook_args.actor
 	
 	card.cost = attacker.initiative;
@@ -76,7 +76,7 @@ function buff_target(ctrl, args) {
 
 /**
   *  alters the actor's stats based on the card args passed.
-  *  args:
+  *  card_args:
   *    hp (optional, default = 0) - added to actor's HP
   *    initiaitve (optional, default = 0) - added to actor's current initiative
   *    attack (optional, default = 0) - added to actor's active card's attack value
@@ -139,6 +139,31 @@ function multi_script(ctrl, args) {
 	}
 }
 
+/**
+  *  -
+  */
+function buff_next_card(ctrl, args) {
+	console.log("buff_next_card: " + args);
+	var trigger_id = "TBD";
+	var signal_id = "signalTBD";
+	var script_ref = {}
+	controller.add_trigger({
+		"trigger_id": GET_ACTION_TRIGGER_ID + char_index,
+		"signal_id": GET_ACTION_SIGNAL_ID + char_index,
+		"script_reference": {"id": RESOLVE_ACTIONS, "args": args}
+	});
+}
+
+/**
+  *  -
+  */
+function triggered_buff(ctrl, args) {
+	console.log("triggered_buff: " + args);
+	var trigger_id = arg.trigger_id;
+	ctrl.remove_trigger(arg.trigger_id);
+	buff_actor(ctrl, args);
+}
+
 // Not Exported. Concatinates two objects and returns the result.
 function concat_args(obj1, obj2) {
 	var new_obj = {}
@@ -153,7 +178,7 @@ function concat_args(obj1, obj2) {
 
 function sideline_active(ctrl, args) {
 	
-	var card 
+	var card = "TODO";
 	ctrl.run_script({"id": "sideline_cards_script", {"actor": args.hook_args.actor}})
 }
 

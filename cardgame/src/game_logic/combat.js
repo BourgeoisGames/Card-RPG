@@ -338,23 +338,78 @@ function get_card_effect_args(effect_id, card) {
     return args;
 }
 
-function execute_card_effect(effect_id, controller, card, hook_args) {
-    console.log("execute_card_effect('" + effect_id + "') - card:");
-    console.log(card);
-    if (typeof(card) === "undefined") { return; }
-    if (typeof(card.effects) === "undefined") { return; }
-	var script_ref = card.effects[effect_id];
+function execute_card_effect(effect_id, controller, hook_args) {
+    console.log("execute_card_effect('" + effect_id + "') - hook_args.card:");
+    console.log(hook_args.card);
+    if (typeof(hook_args.card) === "undefined") { return; }
+    if (typeof(hook_args.card.effects) === "undefined") { return; }
+	var script_ref = hook_args.card.effects[effect_id];
 	if (typeof(script_ref) === "undefined") { return; }
-    //var cardArgs = get_card_effect_args(effect_id, card);
+    //var cardArgs = get_card_effect_args(effect_id, hook_args.card);
     var script_id = script_ref[0]
 	var card_args = script_ref[1]
     var script_args = {
         "controller": controller,
-        "card": card,
         "hook_args": hook_args,
         "card_args": card_args
     }; //*/
     controller.run_script({"id": script_id, "args": script_args});
+}
+
+function active_card_hook_script(ctrl, args) {
+	activate_card_hook(args.hook, ctrl, args.character, args.card, args.hook_args);
+}
+
+function activate_card_hook(key, controller, character, card, hook_args) {
+	hook_args.card = card;
+	hook_args.hook = key;
+	var triggerId = key + character_id
+	controller.trigger(triggerId, hook_args)
+    execute_card_effect(key, controller, hook_args);
+	resolve_passives (key, ctrl, hook_args)
+	resolve_statuses(key, controller, character);
+}
+
+function resolve_passives(key, ctrl, hook_args) {
+	var character = hook_args.character;
+	var expired_passives = [];
+	for (var i = 0; i < character.passives.length; i++) {
+		var passive = character.passives[i];
+		if (passive[key]) {
+			resolve_one_passive(key, ctrl, hook_args, passive[key])
+			if(passive[key].duration.is_expired) {
+				expired_passives.push(i);
+			}
+		}
+	}
+	
+	for (var i = expired_passives.length-1; i >= 0; i--) {
+		var index_removed = expired_passives[i];
+		character.passives.splice(index_removed, 1);
+	}
+}
+
+function resolve_one_passive(key, ctrl, hook_args, passive) {
+	// Run actual passive 
+	var script_ref = passive[key];
+	var args = concat_args(script_ref[1], hook_args);
+	ctrl.run_script([script_ref[0], args])
+	
+	// check duration
+	var duration_args = concat_args(args, passive.duration_script[1]);
+	ctrl.run_script([passive.duration_script[0], duration_args])
+	
+}
+
+function concat_args(obj1, obj2) {
+	var new_obj = {}
+	for (var field in obj1) {
+		new_obj[field] = obj1[field]
+	}
+	for (var field in obj2) {
+		new_obj[field] = obj2[field]
+	}
+	return new_obj;
 }
 
 // {
@@ -490,14 +545,6 @@ function add_card_to_discard(controller, character, card) {
     console.log("combar.js - add_card_to_discard");
     console.log(character.discard);
 }
-
-function activate_card_hook(key, controller, character, card, hook_args) {
-	hook_args.card = card;
-	var triggerId = key + character_id
-	controller.trigger(triggerId, hook_args)
-    execute_card_effect(key, controller, card, hook_args);
-	resolve_statuses(key, controller, character);
-}
     
 function resolve_card_script(controller, data) { 
     var encounter = get_encounter_from_game_state(controller.state);
@@ -630,4 +677,4 @@ var scripts = {
 	"sideline_cards_script": sideline_cards_script
 };
 
-export default gc => gc.add_scripts(scripts);
+//export default gc => gc.add_scripts(scripts);

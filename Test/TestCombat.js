@@ -97,17 +97,66 @@ var sampleCombatEncounter = {} // TODO
 var sampleCombatAction = {} // TODO
 var sampleCombatant = {} // TODO
 
+// Mocks of engine.js predicate functions
+is_event = (x) => {return true;}
+is_display_data = (x) => {return true;}
+is_displayable = (x) => {return true;}
+is_script_reference = (x) => {return true;}
+is_executable = (x) => {return true;}
+is_script = (x) => {return true;}
+is_trigger = (x) => {return true;}
+is_trigger_list = (x) => {return true;}
+
 function MockController() {
+	
+	this.calls = {}
+	this.returns = {}
+	
+	this.calls.add_trigger = [];
+	this.add_trigger = (x) => {this.calls.add_trigger.push(x)};
+	
+	this.calls.remove_trigger = [];
+	this.remove_trigger = (x) => {this.calls.remove_trigger.push(x)};
+	
+	this.calls.get_by_type_and_id = []
+	this.returns.get_by_type_and_id = []
+	this.get_by_type_and_id = (type, id) => {
+		if (this.returns.get_by_type_and_id.length == 0) {
+			throw "no return value availible for 'get_by_type_and_id' call with args (" + type + ", " + id + ")"
+		}
+		this.calls.get_by_type_and_id.push([type, id])
+		return this.returns.get_by_type_and_id.shift();
+	}
+	
+	this.validate_game_data = () => {}; // does nothing
+
+	this.calls.run_script = []
+	this.returns.run_script = []
+	this.run_script = (x) => {
+		this.calls.run_script.push(x)
+		return this.returns.run_script.shift();
+	}
+	
+	this.calls.trigger = []
+	this.trigger = (x, args) => {this.calls.trigger.push([x, args])}
+
     this.scripts_called = []
     this.execute_script = (sid, args) => {
-        console.log("sid: " + sid);
+		throw "this mock function is depricated b/c it does not conform to the current Controller API"
+        /*console.log("sid: " + sid);
         console.log("args: " + args);
         var i = this.scripts_called.length;
-        this.scripts_called[i] = [sid, args];
+        this.scripts_called[i] = [sid, args]; //*/
     }
-    this.get_by_type_and_id = (type, tid) => {
-        return $.extend(true, {}, sampleCard1);
-    }
+	this.calls.get_by_type_and_ids = []
+	this.returns.get_by_type_and_ids = []
+	this.get_by_type_and_ids = () => {
+		if (this.returns.get_by_type_and_ids.length == 0) {
+			throw "no return value availible for 'get_by_type_and_ids' (plural) call with args (" + type + ", " + id + ")"
+		}
+		this.calls.get_by_type_and_ids.push([type, id])
+		return this.returns.get_by_type_and_ids.shift();
+	}
 }
 
 function validate_script_was_called(assert, mockCtrl, sid, i) {
@@ -464,6 +513,7 @@ function testExecuteCardEffect(assert) {
     execute_card_effect("some_script", mockCtrl, card, undefined);
     // assert, mockCtrl, sid, offset
 //    validate_script_was_called(assert, mockCtrl, "expected script name", 0);
+	console.log(mockCtrl.scripts_called);
     var sid = mockCtrl.scripts_called[0][0]
     var args_called = mockCtrl.scripts_called[0][1]
 	console.log("scripts called");
